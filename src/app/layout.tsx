@@ -52,9 +52,9 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         </a>
         <div className="flex min-h-dvh flex-col">
           <header className="border-b border-border bg-surface">
-            <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-4">
-              <span className="font-heading text-lg font-bold">Interchange</span>
-              <nav aria-label="Primary" className="text-sm text-text-muted">
+            <div className="mx-auto flex max-w-6xl items-center justify-between gap-4 px-4 py-4">
+              <span className="shrink-0 font-heading text-lg font-bold">Interchange</span>
+              <nav aria-label="Primary" className="hidden text-sm text-text-muted sm:block">
                 <span>Learn integration, data, and AI engineering</span>
               </nav>
             </div>
