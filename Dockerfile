@@ -1,7 +1,12 @@
 # syntax=docker/dockerfile:1
 
 FROM node:22-alpine AS base
-RUN corepack enable
+# Install pnpm directly instead of via `corepack enable`: corepack's
+# first-run resolves and signature-verifies a pnpm release over the
+# network, which fails intermittently (and entirely in offline/sandboxed
+# builds). A pinned global install avoids that and matches the version
+# pnpm-lock.yaml was generated with.
+RUN npm install -g pnpm@10.33.0
 
 # ---- deps ----
 FROM base AS deps
