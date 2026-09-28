@@ -1,106 +1,7 @@
+import Link from "next/link";
 import { TransitMapTeaser } from "@/components/transit-map-teaser";
-
-type LineStatus = "porting" | "authoring";
-
-interface Line {
-  id: string;
-  code: string;
-  name: string;
-  tagline: string;
-  status: LineStatus;
-  statusLabel: string;
-}
-
-const LINES: Line[] = [
-  {
-    id: "enterprise-integration",
-    code: "EI",
-    name: "Enterprise Integration",
-    tagline: "Patterns, event-driven architecture, API design & governance",
-    status: "porting",
-    statusLabel: "Porting in M1",
-  },
-  {
-    id: "mulesoft",
-    code: "MU",
-    name: "MuleSoft",
-    tagline: "Developer, architect, DataWeave, CI/CD, Flex Gateway",
-    status: "porting",
-    statusLabel: "Porting in M1",
-  },
-  {
-    id: "cloud-integration",
-    code: "CI",
-    name: "Cloud Integration",
-    tagline: "AWS & Azure messaging, APIs, orchestration, hybrid connectivity",
-    status: "authoring",
-    statusLabel: "Authoring — M7 batch 5",
-  },
-  {
-    id: "sap-btp",
-    code: "SAP",
-    name: "SAP BTP Integration Suite",
-    tagline: "iFlows, adapters, API management, S/4HANA integration",
-    status: "authoring",
-    statusLabel: "Authoring — M7 batch 6",
-  },
-  {
-    id: "data-engineering",
-    code: "DE",
-    name: "Data Engineering",
-    tagline: "Pipelines, streaming, dbt, Spark, Kafka",
-    status: "porting",
-    statusLabel: "Porting in M1",
-  },
-  {
-    id: "data-engineering-cloud",
-    code: "DC",
-    name: "Data Engineering on AWS/Azure",
-    tagline: "AWS & Azure data stacks, Microsoft Fabric",
-    status: "porting",
-    statusLabel: "Porting in M1",
-  },
-  {
-    id: "postgresql",
-    code: "PG",
-    name: "PostgreSQL",
-    tagline: "Indexing, internals, replication, pgvector — lab-heavy",
-    status: "authoring",
-    statusLabel: "Authoring — M7 batch 4",
-  },
-  {
-    id: "implementation-engineer",
-    code: "IE",
-    name: "Implementation Engineer",
-    tagline: "Discovery, migration, cutover, troubleshooting, RCA",
-    status: "authoring",
-    statusLabel: "Authoring — M7 batch 7",
-  },
-  {
-    id: "forward-deployed",
-    code: "FD",
-    name: "Forward Deployed Engineer",
-    tagline: "GenAI prototyping to production, customer discovery",
-    status: "authoring",
-    statusLabel: "Authoring — M7 batch 3",
-  },
-  {
-    id: "ai-engineer",
-    code: "AI",
-    name: "AI Engineer",
-    tagline: "LLMs, RAG, agents, MCP, evaluation, LLMOps",
-    status: "authoring",
-    statusLabel: "Authoring — M7 batch 1",
-  },
-  {
-    id: "anthropic-training",
-    code: "AT",
-    name: "Anthropic Training",
-    tagline: "Claude API, prompt engineering, Claude Code, agents",
-    status: "authoring",
-    statusLabel: "Authoring — M7 batch 2",
-  },
-];
+import { LINES } from "@/content/lines";
+import { listModules } from "@/content/loader";
 
 const STATS = [
   { value: "11", label: "Lines" },
@@ -109,6 +10,9 @@ const STATS = [
 ];
 
 export default function HomePage() {
+  const moduleCounts = Object.fromEntries(LINES.map((line) => [line.id, listModules(line.id).length]));
+  const publishedCount = Object.values(moduleCounts).filter((c) => c > 0).length;
+
   return (
     <div className="space-y-16 sm:space-y-20">
       <section className="grid gap-10 lg:grid-cols-[1.1fr_1fr] lg:items-center">
@@ -130,7 +34,7 @@ export default function HomePage() {
               Browse the lines
             </a>
             <span className="text-sm text-text-muted">
-              M0 preview — content and the interactive map land in M1 / M2.
+              {publishedCount} of {LINES.length} lines have a published module — the rest arrive with M7.
             </span>
           </div>
         </div>
@@ -151,41 +55,50 @@ export default function HomePage() {
       <section id="lines" className="scroll-mt-20">
         <div className="flex items-baseline justify-between gap-4">
           <h2 className="font-heading text-2xl font-bold">All lines</h2>
-          <p className="text-sm text-text-muted">Station data and quizzes arrive with the content engine (M1).</p>
+          <p className="text-sm text-text-muted">Click a line to open its published module, quiz, and flashcards.</p>
         </div>
         <ul className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {LINES.map((line) => (
-            <li
-              key={line.id}
-              className="group relative overflow-hidden rounded-station border border-border bg-surface p-5 transition hover:-translate-y-0.5 hover:shadow-md"
-            >
-              <span
-                aria-hidden="true"
-                className="absolute inset-y-0 left-0 w-1"
-                style={{ backgroundColor: `rgb(var(--line-${line.id}))` }}
-              />
-              <div className="flex items-start gap-3">
-                <span
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold text-white"
-                  style={{ backgroundColor: `rgb(var(--line-${line.id}))` }}
-                  aria-hidden="true"
+          {LINES.map((line) => {
+            const count = moduleCounts[line.id] ?? 0;
+            return (
+              <li key={line.id}>
+                <Link
+                  href={`/lines/${line.id}`}
+                  className="group relative block overflow-hidden rounded-station border border-border bg-surface p-5 transition hover:-translate-y-0.5 hover:shadow-md"
                 >
-                  {line.code}
-                </span>
-                <div className="min-w-0">
-                  <h3 className="font-heading text-base font-semibold leading-snug">{line.name}</h3>
-                  <p className="mt-1 text-sm text-text-muted">{line.tagline}</p>
-                </div>
-              </div>
-              <div className="mt-4 flex items-center gap-1.5 text-xs">
-                <span
-                  aria-hidden="true"
-                  className={`h-1.5 w-1.5 rounded-full ${line.status === "porting" ? "bg-accent" : "bg-text-muted"}`}
-                />
-                <span className="text-text-muted">{line.statusLabel}</span>
-              </div>
-            </li>
-          ))}
+                  <span
+                    aria-hidden="true"
+                    className="absolute inset-y-0 left-0 w-1"
+                    style={{ backgroundColor: `rgb(var(--line-${line.id}))` }}
+                  />
+                  <div className="flex items-start gap-3">
+                    <span
+                      className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full font-mono text-xs font-bold text-white"
+                      style={{ backgroundColor: `rgb(var(--line-${line.id}))` }}
+                      aria-hidden="true"
+                    >
+                      {line.code}
+                    </span>
+                    <div className="min-w-0">
+                      <h3 className="font-heading text-base font-semibold leading-snug group-hover:underline">
+                        {line.name}
+                      </h3>
+                      <p className="mt-1 text-sm text-text-muted">{line.tagline}</p>
+                    </div>
+                  </div>
+                  <div className="mt-4 flex items-center gap-1.5 text-xs">
+                    <span
+                      aria-hidden="true"
+                      className={`h-1.5 w-1.5 rounded-full ${count > 0 ? "bg-emerald-500" : "bg-text-muted"}`}
+                    />
+                    <span className="text-text-muted">
+                      {count > 0 ? `${count} module${count === 1 ? "" : "s"} published` : line.statusLabel}
+                    </span>
+                  </div>
+                </Link>
+              </li>
+            );
+          })}
         </ul>
       </section>
     </div>

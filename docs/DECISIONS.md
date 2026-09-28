@@ -33,3 +33,24 @@ Short ADR-style log of decisions made without blocking on user input, per the bu
 
 **Context:** The Dockerfile `HEALTHCHECK` and `docker-compose.yml` depend on `/api/health` reflecting real DB connectivity, per the prompt.
 **Decision:** `GET /api/health` runs `select 1` through Drizzle on every call rather than just checking that a client object exists, so a genuinely unreachable database returns HTTP 503.
+
+## ADR-007: Content engine reads directly from the filesystem; no DB sync yet
+
+**Context:** `CLAUDE.md`'s original architecture has `content:sync` write validated content into Postgres so progress/search can reference stable IDs. But progress tracking, auth, and search don't exist yet (M2/M3/M4).
+**Decision:** For the first content batch, module/line pages read content straight from `/content` via `src/content/loader.ts` (fs + Zod validation) at request time, with no DB round-trip. `content:sync` stays a no-op stub. This gets real, browsable, interactive content shipped now without building progress/search infrastructure it can't use yet.
+**Follow-up:** When M2 adds progress tracking, implement `content:sync` for real and switch module pages to read through it (or keep filesystem reads for content and add a separate progress-only DB layer — decide then).
+
+## ADR-008: js-yaml pinned to v4, not v5
+
+**Context:** v5 is ESM-only with a very different, undocumented-by-most-tutorials API (no default export, `load`/`dump` behave differently). It broke `tsx`'s import immediately.
+**Decision:** Use `js-yaml@^4.1.0` (CJS, stable, default-export compatible, matches essentially every existing example/tutorial) plus `@types/js-yaml` for types.
+
+## ADR-009: MDX rendering via `next-mdx-remote/rsc`, Mermaid rendered client-side
+
+**Context:** Lessons need headings/callouts/tables/code-with-copy-button/Mermaid diagrams per `CLAUDE.md`.
+**Decision:** Compile MDX server-side with `next-mdx-remote/rsc` + `remark-gfm` (tables, task lists), with a custom component map (`src/components/mdx/mdx-components.tsx`) — callouts are just styled blockquotes (`> **Note:** ...`) rather than a custom remark directive syntax, to keep the authoring format plain Markdown. Code blocks are a client component with a copy button; when the fenced language is `mermaid`, it's handed off to a client component that lazy-loads the `mermaid` package and renders to inline SVG (respecting `prefers-color-scheme`). This avoids a server-side Mermaid renderer (heavier, less current) at the cost of a client-only diagram render.
+
+## ADR-010: Quiz/flashcard/exercise interactivity ships now, auto-grading is partial
+
+**Context:** M2 (quizzes/flashcards) and M4 (AI-graded short answer) are separate milestones, but shipping module pages with static, non-interactive quizzes would be a poor experience for reviewing this batch.
+**Decision:** Built full client-side interactivity now (`src/components/module/*`): flashcard flip/navigate, quiz answer capture and auto-grading for single/multi/order/match/predict types, and reveal-model-answer for exercises. `short`-type quiz questions and exercise rubric feedback are explicitly labeled "AI-graded in M4" rather than faked — no auto-grading logic pretends to score free text. FSRS spaced repetition and server-persisted progress are still M2/M3 work; today's flashcard/quiz state is component-local and resets on reload.
