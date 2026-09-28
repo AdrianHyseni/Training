@@ -1,0 +1,101 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --font-heading: "Bricolage Grotesque", sans-serif;
+  --font-body: "Atkinson Hyperlegible", sans-serif;
+  --font-mono: "Atkinson Hyperlegible Mono", monospace;
+
+  --radius-station: 0.75rem;
+
+  /* Cool grey-blue, light mode */
+  --color-bg: 244 246 250;
+  --color-surface: 255 255 255;
+  --color-surface-raised: 255 255 255;
+  --color-border: 216 222 233;
+  --color-text: 21 28 41;
+  --color-text-muted: 90 101 120;
+  --color-accent: 37 99 235;
+
+  /* One colour per line */
+  --line-enterprise-integration: 37 99 235; /* blue */
+  --line-mulesoft: 124 58 237; /* violet */
+  --line-cloud-integration: 8 145 178; /* cyan */
+  --line-sap-btp: 2 132 199; /* sky */
+  --line-data-engineering: 22 163 74; /* green */
+  --line-data-engineering-cloud: 101 163 13; /* lime-green */
+  --line-postgresql: 3 105 161; /* postgres blue */
+  --line-implementation-engineer: 217 119 6; /* amber */
+  --line-forward-deployed: 219 39 119; /* pink */
+  --line-ai-engineer: 220 38 38; /* red */
+  --line-anthropic-training: 194 65 12; /* clay/terracotta */
+}
+
+:root[data-theme="dark"],
+.dark {
+  --color-bg: 13 17 26;
+  --color-surface: 19 24 36;
+  --color-surface-raised: 26 32 46;
+  --color-border: 41 50 68;
+  --color-text: 229 233 240;
+  --color-text-muted: 148 160 179;
+  --color-accent: 96 148 255;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-bg: 13 17 26;
+    --color-surface: 19 24 36;
+    --color-surface-raised: 26 32 46;
+    --color-border: 41 50 68;
+    --color-text: 229 233 240;
+    --color-text-muted: 148 160 179;
+    --color-accent: 96 148 255;
+  }
+}
+
+* {
+  border-color: rgb(var(--color-border));
+}
+
+html,
+body {
+  background: rgb(var(--color-bg));
+  color: rgb(var(--color-text));
+}
+
+body {
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+}
+
+code,
+pre,
+kbd {
+  font-family: var(--font-mono);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+:focus-visible {
+  outline: 2px solid rgb(var(--color-accent));
+  outline-offset: 2px;
+}

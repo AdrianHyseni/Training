@@ -1,0 +1,61 @@
+name: interchange
+
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-interchange}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-interchange}
+      POSTGRES_DB: ${POSTGRES_DB:-interchange}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-interchange} -d ${POSTGRES_DB:-interchange}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    restart: unless-stopped
+    ports:
+      - "${MAILPIT_UI_PORT:-8025}:8025"
+      - "${MAILPIT_SMTP_PORT:-1025}:1025"
+
+  migrate:
+    build:
+      context: .
+      target: build
+    working_dir: /app
+    command: sh -c "pnpm db:migrate && pnpm content:sync"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-interchange}:${POSTGRES_PASSWORD:-interchange}@db:5432/${POSTGRES_DB:-interchange}
+    depends_on:
+      db:
+        condition: service_healthy
+
+  app:
+    build:
+      context: .
+      target: runtime
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-interchange}:${POSTGRES_PASSWORD:-interchange}@db:5432/${POSTGRES_DB:-interchange}
+      EMAIL_SERVER: smtp://mailpit:1025
+    depends_on:
+      db:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  db_data:

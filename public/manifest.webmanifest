@@ -1,0 +1,10 @@
+{
+  "name": "Interchange",
+  "short_name": "Interchange",
+  "description": "A learning platform for enterprise integration, MuleSoft, SAP BTP, AWS/Azure, data engineering, PostgreSQL, and AI engineering.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f4f6fa",
+  "theme_color": "#f4f6fa",
+  "icons": []
+}

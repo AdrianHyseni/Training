@@ -1,0 +1,47 @@
+image: node:22-alpine
+
+definitions:
+  caches:
+    pnpm: $BITBUCKET_CLONE_DIR/.pnpm-store
+
+pipelines:
+  pull-requests:
+    "**":
+      - step:
+          name: Lint, typecheck, test, build
+          caches:
+            - pnpm
+          script:
+            - corepack enable
+            - pnpm config set store-dir $BITBUCKET_CLONE_DIR/.pnpm-store
+            - pnpm install --frozen-lockfile
+            - pnpm lint
+            - pnpm typecheck
+            - pnpm test
+            - pnpm content:validate
+            - pnpm build
+
+  branches:
+    main:
+      - step:
+          name: Lint, typecheck, test, build
+          caches:
+            - pnpm
+          script:
+            - corepack enable
+            - pnpm config set store-dir $BITBUCKET_CLONE_DIR/.pnpm-store
+            - pnpm install --frozen-lockfile
+            - pnpm lint
+            - pnpm typecheck
+            - pnpm test
+            - pnpm content:validate
+            - pnpm build
+      - step:
+          name: Build and push image
+          services:
+            - docker
+          script:
+            - docker build --target runtime -t "$DOCKER_REGISTRY/interchange:$BITBUCKET_COMMIT" -t "$DOCKER_REGISTRY/interchange:latest" .
+            - echo "$DOCKER_PASSWORD" | docker login "$DOCKER_REGISTRY" -u "$DOCKER_USERNAME" --password-stdin
+            - docker push "$DOCKER_REGISTRY/interchange:$BITBUCKET_COMMIT"
+            - docker push "$DOCKER_REGISTRY/interchange:latest"
