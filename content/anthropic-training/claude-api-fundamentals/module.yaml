@@ -1,0 +1,24 @@
+id: claude-api-fundamentals
+line: anthropic-training
+title: Claude API Fundamentals
+level: foundation
+estimatedMinutes: 50
+prerequisites: []
+related: []
+certifications: []
+lastReviewed: "2026-09-28"
+verify:
+  - claim: >-
+      Current Claude model IDs, context window sizes, and pricing change
+      frequently — confirm the exact model ID and limits before quoting them
+      to a class or putting them in production code.
+    sourceUrl: https://platform.claude.com/docs/en/models/overview
+  - claim: >-
+      Exact numeric rate limits (requests/tokens per minute) and monthly
+      spend caps per usage tier are subject to change and vary by
+      organization tier — verify current values before citing a number.
+    sourceUrl: https://platform.claude.com/docs/en/api/rate-limits
+  - claim: >-
+      The list of official Anthropic SDK languages and their installation
+      instructions may expand or change.
+    sourceUrl: https://platform.claude.com/docs/en/cli-sdks-libraries/overview

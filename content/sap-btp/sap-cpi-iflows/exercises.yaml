@@ -1,0 +1,79 @@
+exercises:
+  - id: ex1
+    prompt: >-
+      Design an iFlow that receives purchase order confirmations from a
+      cloud-based supplier portal over HTTPS (JSON payloads, up to 50 line
+      items per order) and needs to create corresponding purchase order
+      confirmation IDocs in an on-premise S/4HANA system. About 5% of calls to
+      S/4HANA fail with transient connectivity errors during nightly batch
+      windows. Describe the adapters, core steps, and resilience pattern you'd
+      use, and explain your reasoning.
+    modelAnswer: |
+      Sender: HTTPS adapter exposing an endpoint the supplier portal posts JSON
+      to. Immediately after the sender, a Content Modifier captures the
+      supplier's order reference into a message property, since the payload
+      shape will change as it moves through the flow and this reference is
+      needed later for logging/correlation.
+
+      Because S/4HANA is on-premise, the receiver side uses the IDoc adapter
+      routed through SAP Cloud Connector rather than a direct public
+      connection. Since each order can have up to 50 line items and IDocs are
+      often more naturally handled as one document per order (or per a
+      defined chunk of items depending on the target IDoc type), a Splitter
+      is used if the target structure requires per-item processing, followed
+      by Message Mapping from the JSON structure to the IDoc structure per
+      item, then a Gather to recombine before sending, or a direct mapping to
+      a single multi-segment IDoc if the target type supports that natively
+      — the choice depends on the specific IDoc type's structure, which is
+      worth confirming during design rather than assumed generically.
+
+      For resilience: wrap the flow with an exception subprocess. Since the
+      failures described are transient (nightly batch connectivity blips),
+      route failed messages to a JMS retry queue with a bounded number of
+      retries and a backoff interval long enough to ride out a typical batch
+      window outage. Messages that exhaust retries land in a dead-letter
+      queue that triggers an alert to the integration team, so a permanent
+      failure (bad data, a mapping error) doesn't retry forever and doesn't
+      get silently dropped either.
+    rubric:
+      - criterion: "Chooses HTTPS for the inbound supplier call and IDoc (via Cloud Connector) for the on-premise S/4HANA side, with reasoning"
+        points: 2
+      - criterion: "Uses a Content Modifier to capture correlation data early, before the payload shape changes"
+        points: 1
+      - criterion: "Addresses the multi-line-item structure with Splitter/Mapping/Gather (or a reasoned alternative) rather than ignoring it"
+        points: 1
+      - criterion: "Proposes an exception subprocess with JMS-based bounded retry and a dead-letter/alerting path for the transient failure rate described"
+        points: 2
+  - id: ex2
+    prompt: >-
+      A colleague proposes handling all data transformation in every iFlow
+      with Groovy scripts, arguing it's "more powerful and consistent" than
+      switching between Message Mapping and Groovy depending on the case.
+      Write a short design note responding to this proposal.
+    modelAnswer: |
+      Groovy is indeed more powerful in the sense that it can express
+      anything a general-purpose language can, but "more powerful" isn't the
+      same as "better default." Message Mapping is declarative: someone
+      opening the iFlow later can see the field-to-field transformation at a
+      glance, without reading and mentally executing code. That matters a lot
+      for maintainability, onboarding new team members, and reducing the
+      chance that a maintenance change introduces a subtle bug that only
+      shows up on an edge-case payload.
+
+      The right policy is the reverse of the proposal: default to Message
+      Mapping for anything expressible as structural field-to-field
+      transformation, including conditional logic and standard functions, and
+      reserve Groovy for the genuine exceptions — irregular formats a mapping
+      can't produce cleanly, logic that needs real branching or shared
+      utility calls, or manipulation (like non-standard date parsing) that a
+      mapping UI doesn't support well. Standardizing everything on Groovy
+      trades short-term "consistency" for long-term review and maintenance
+      cost, and makes every future change to a transformation a code review
+      instead of a quick visual check.
+    rubric:
+      - criterion: "Pushes back on making Groovy the universal default rather than just agreeing"
+        points: 2
+      - criterion: "Explains the maintainability/readability advantage of Message Mapping for structural transformations"
+        points: 2
+      - criterion: "States a clear policy: mapping by default, Groovy reserved for logic mapping can't express"
+        points: 1

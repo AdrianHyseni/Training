@@ -1,0 +1,31 @@
+cards:
+  - id: c1
+    front: "What is a forward deployed engineer (FDE), in one sentence?"
+    back: "A software engineer who embeds inside a customer's organization and writes, ships, and owns working software there, rather than handing over a spec or configuring a product from a distance."
+  - id: c2
+    front: "Which company coined the 'forward deployed engineer' title, and why?"
+    back: "Palantir, in the early 2010s, to work with customers (often intelligence agencies) who couldn't fully specify requirements up front — engineers embedded directly to observe, build, and iterate in real time."
+  - id: c3
+    front: "How does an FDE differ from an implementation engineer?"
+    back: "An implementation engineer configures a vendor's product within its existing boundaries; an FDE writes general-purpose code and owns it through to production in the customer's own environment."
+  - id: c4
+    front: "How does an FDE differ from a traditional management consultant?"
+    back: "A consultant's typical deliverable is a plan or recommendation for someone else to execute; an FDE's deliverable is working software, judged by whether a real workflow measurably improved."
+  - id: c5
+    front: "What are the four stages of the FDE engagement lifecycle described in this module?"
+    back: "Discovery, prototype, pilot, production handoff — with feedback loops back to earlier stages when findings warrant it."
+  - id: c6
+    front: "What does good problem discovery look for, beyond just the executive sponsor's stated ask?"
+    back: "The highest-value workflow (not the most visible one), usually found by observing the people who actually do the work and looking for where the process genuinely stalls."
+  - id: c7
+    front: "Why must a pilot define measurable success before code is written?"
+    back: "Without a concrete baseline, target, and time frame, there's no way to know afterward whether the pilot worked or to justify expanding it into production."
+  - id: c8
+    front: "What makes a pilot more likely to actually reach production, rather than staying a disconnected demo?"
+    back: "Scoping it as a narrow but real end-to-end slice, using real or realistic data and integration points, and agreeing on production handoff criteria before the pilot starts."
+  - id: c9
+    front: "What is the rapid prototyping philosophy behind FDE work?"
+    back: "Build a thin, working slice in days so customers can react to something concrete — this surfaces wrong assumptions far more cheaply than weeks of abstract requirements-gathering."
+  - id: c10
+    front: "If a pilot uncovers a hard constraint that breaks an assumption (e.g. poor input data quality), what should happen?"
+    back: "The team should loop back and rework the prototype or scope to address it, rather than pushing an unvalidated system forward into production to hit a schedule."

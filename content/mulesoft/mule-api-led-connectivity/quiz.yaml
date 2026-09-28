@@ -1,0 +1,118 @@
+passThreshold: 0.75
+questions:
+  - id: q1
+    type: single
+    prompt: "In API-led connectivity, which layer is responsible for knowing about a specific consuming channel, like a mobile app?"
+    options: ["System API", "Process API", "Experience API", "Gateway API"]
+    correct: 2
+    explanation: "Experience APIs are the only layer that's aware of the specific channel consuming them; system and process APIs stay channel-agnostic so they can be reused across many experience APIs."
+    domain: architecture
+  - id: q2
+    type: single
+    prompt: "Why does a system API normalize backend-specific field names (e.g. a mainframe status code) into a documented enum instead of passing them through as-is?"
+    options: [
+      "It makes the system API faster",
+      "It isolates process and experience APIs from backend implementation details, so a backend change doesn't ripple upward",
+      "RAML requires all fields to be enums",
+      "It reduces the number of HTTP calls needed"
+    ]
+    correct: 1
+    explanation: "The whole point of a system API is to hide backend quirks behind a stable interface — if it leaked raw field names, every consumer above it would break whenever the backend's internal representation changed."
+    domain: architecture
+  - id: q3
+    type: multi
+    prompt: "Which of the following are genuine costs of adopting a three-layer (system/process/experience) API architecture?"
+    options: [
+      "Additional network hops between layers",
+      "More deployable artifacts and contracts to maintain",
+      "It eliminates the need for any error handling",
+      "Over-engineering risk for integrations with only one consumer and no reuse expected"
+    ]
+    correct: [0, 1, 3]
+    explanation: "Layering adds real overhead — extra hops, more artifacts, more coordination — and pays off only when reuse across multiple consumers or systems is actually expected; it doesn't remove the need for error handling at all."
+    domain: architecture
+  - id: q4
+    type: order
+    prompt: "Order these steps in a typical API-first design workflow for a new process API."
+    items:
+      - "Write and review the API specification (resources, schemas, error responses)"
+      - "Publish the specification to a shared catalog (e.g. Anypoint Exchange)"
+      - "Implement the flow logic against the agreed contract"
+      - "Write MUnit tests that mock the system APIs the flow calls"
+    correctOrder: [0, 1, 2, 3]
+    explanation: "API-first design means the contract is agreed and published before implementation begins, and tests are written to verify the implementation matches that contract, mocking dependencies rather than hitting live backends."
+    domain: design
+  - id: q5
+    type: match
+    prompt: "Match each MuleSoft/Mule concept to what it's primarily used for."
+    left: ["DataWeave", "MUnit", "Global error handler", "Anypoint Exchange"]
+    right: [
+      "Cataloging and discovering reusable APIs, connectors, and specs",
+      "Transforming payloads between shapes",
+      "Testing Mule flows with mocked dependencies",
+      "Centralizing consistent error-to-HTTP-status mapping across a project"
+    ]
+    correctPairs: [[0, 1], [1, 2], [2, 3], [3, 0]]
+    explanation: "DataWeave shapes data, MUnit tests flows against mocks, a global error handler standardizes how errors surface, and Exchange is the shared catalog that makes reuse across teams practical."
+    domain: implementation
+  - id: q6
+    type: predict
+    prompt: "Given this DataWeave snippet, what does the output field `total` contain?"
+    code: |
+      %dw 2.0
+      output application/json
+      ---
+      {
+        total: payload.lineItems reduce ((item, acc = 0) -> acc + (item.price * item.qty))
+      }
+    language: dataweave
+    options: [
+      "The sum of price times quantity across all line items",
+      "The count of line items",
+      "The price of the first line item only",
+      "An error, because reduce requires an explicit accumulator type"
+    ]
+    correct: 0
+    explanation: "reduce walks the lineItems array accumulating acc, starting at 0, and on each item adds price * qty — so the result is the order's total value across all items."
+    domain: dataweave
+  - id: q7
+    type: single
+    prompt: "A process API call to a system API times out. The process API has a fallback default value it can use, and the overall response is still useful without that data. Which error-handling pattern fits?"
+    options: ["On Error Propagate", "On Error Continue", "No error handler at all", "Retry indefinitely with no backoff"]
+    correct: 1
+    explanation: "On Error Continue lets the flow recover and keep going with a substitute value — appropriate when the failure is survivable and the response is still useful without it. On Error Propagate would be right if the request genuinely couldn't be fulfilled."
+    domain: error-handling
+  - id: q8
+    type: multi
+    prompt: "Which statements about Mule's typed error system are accurate?"
+    options: [
+      "Errors follow a hierarchy, so a specific error type (like HTTP:TIMEOUT) is also an instance of a broader type",
+      "Every error in a Mule app must be handled with exactly the same handler, with no differentiation by type",
+      "Typed errors let you catch a specific failure mode differently from a more general one",
+      "Error types have no relationship to HTTP status codes returned by an API"
+    ]
+    correct: [0, 2]
+    explanation: "Mule's error types form a hierarchy (a specific type is a case of a broader one), which is exactly what lets a global error handler map different error types to different, differentiated HTTP responses rather than treating every failure identically."
+    domain: error-handling
+  - id: q9
+    type: short
+    prompt: "Explain why a process API's MUnit tests should mock the system APIs it depends on rather than calling the real backends. Give two reasons."
+    rubric:
+      - criterion: "Mentions that tests become faster and/or deterministic (not dependent on live backend availability or data state)"
+        points: 1
+      - criterion: "Mentions that mocking isolates what's actually under test — the orchestration/business logic — from the correctness of the backend connection itself"
+        points: 1
+    explanation: "Mocking dependencies keeps process-API tests fast, deterministic, and focused on orchestration logic rather than on whether a real backend happens to be up or its data happens to match — that's what the system API's own tests are for."
+    domain: testing
+  - id: q10
+    type: single
+    prompt: "Which of these is a durable architectural reason for API-led connectivity, as opposed to a vendor-specific detail that could change?"
+    options: [
+      "It reuses a small set of purposeful APIs so the cost of adding a new consumer drops over time",
+      "It requires RAML specifically and no other specification format",
+      "It only works with one particular cloud deployment model",
+      "It guarantees a specific certification exam score"
+    ]
+    correct: 0
+    explanation: "The reuse-driven reduction in per-consumer integration cost is the durable architectural idea behind API-led connectivity; the specific spec format, deployment model, or certification details are vendor/tooling specifics that change over time and should be verified separately."
+    domain: architecture

@@ -1,0 +1,74 @@
+exercises:
+  - id: ex1
+    prompt: >-
+      An e-commerce company currently computes "items low in stock" as a nightly
+      batch job. Warehouse staff want near-real-time alerts instead, since stockouts
+      during flash sales cause lost revenue within minutes, not hours. Design a
+      streaming pipeline for this, covering the topic/partitioning design, the
+      delivery-semantics tradeoff you'd choose, and one data quality check you'd add.
+    modelAnswer: |
+      Publish inventory-change events (sale, restock, return, manual adjustment) to a
+      Kafka topic like `inventory.changed`, keyed by SKU so that all changes to a given
+      SKU land on the same partition and stay ordered relative to each other — this
+      matters because inventory math depends on applying changes in the right order
+      for a given item.
+
+      A stream processor maintains running stock counts per SKU (a stateful aggregation,
+      keyed the same way as the topic) and emits an alert event to `inventory.low_stock`
+      whenever a SKU's count crosses its threshold. Use at-least-once delivery with an
+      idempotent aggregation: since the running count is derived by replaying/summing
+      keyed events rather than blindly incrementing a single mutable counter on retry,
+      reprocessing a duplicate event should be made a no-op (e.g. dedupe on an event ID
+      the source system attaches, or make the aggregation naturally re-derivable from
+      the log). Full exactly-once transactional guarantees aren't worth the added
+      complexity here — a duplicate low-stock alert firing twice is a minor annoyance,
+      not a costly failure like a double charge.
+
+      Data quality check: monitor consumer lag on the aggregation service as the
+      freshness signal (if lag grows, alerts arrive too late to matter for a live flash
+      sale), and add a completeness check comparing the daily sum of streamed inventory
+      changes against the batch warehouse system's end-of-day totals, to catch any
+      silent gap in the event stream before it causes chronically wrong stock counts.
+    rubric:
+      - criterion: "Proposes a topic/partitioning scheme keyed appropriately (e.g. by SKU) and explains why that key preserves needed ordering"
+        points: 2
+      - criterion: "Chooses and justifies a delivery-semantics tradeoff (at-least-once + idempotency vs. full exactly-once) rather than defaulting to the most complex option"
+        points: 2
+      - criterion: "Proposes a concrete, relevant data quality check (freshness via lag, and/or completeness via reconciliation against another source)"
+        points: 1
+  - id: ex2
+    prompt: >-
+      Your team owns an `orders` topic consumed by five independent downstream
+      teams. Product wants to add a required `discount_code` field to every order
+      event. Write a short design note describing how you'd roll this out without
+      breaking any of the five consumers.
+    modelAnswer: |
+      Don't add it as a required field in one atomic change — that breaks any consumer
+      whose deserializer doesn't know about it yet, and none of the five teams share
+      your deploy schedule. Instead:
+
+      1. Add `discount_code` as an *optional* field with a sensible default (e.g. null
+         or empty string) rather than required. This keeps the change backward and
+         forward compatible: old consumers ignore the new field entirely, and new
+         consumers reading old events (written before the field existed) get the
+         default instead of an error.
+      2. Register the new schema version with the schema registry under a full-
+         compatibility (or at least backward-compatible) check, so any producer trying
+         to publish a genuinely incompatible change is rejected before it reaches the
+         topic.
+      3. Notify the five consuming teams and give them a migration window to start
+         reading the field once they're ready, rather than forcing a synchronized cutover.
+      4. Only once all five teams confirm they handle the field (or explicitly don't
+         need it), consider whether it's worth the coordination cost of ever tightening
+         it to required — often it's not worth doing at all, since "optional with a
+         default" already satisfies the actual need.
+
+      This avoids a 2am incident where a consumer team's deserializer starts throwing
+      errors the moment the new field appears in the stream.
+    rubric:
+      - criterion: "Recognizes that a required-field change is unsafe and proposes optional-with-default instead"
+        points: 2
+      - criterion: "References backward/forward compatibility explicitly and/or schema registry enforcement"
+        points: 2
+      - criterion: "Addresses coordinating independently-deployed consumers (staged rollout / migration window) rather than a single atomic cutover"
+        points: 1

@@ -1,0 +1,114 @@
+passThreshold: 0.75
+questions:
+  - id: q1
+    type: single
+    prompt: "Which company popularized the 'forward deployed engineer' title, and roughly when?"
+    options:
+      - "Palantir, in the early 2010s"
+      - "Salesforce, in the late 1990s"
+      - "Anthropic, in 2023"
+      - "MuleSoft, in the mid-2000s"
+    correct: 0
+    explanation: "Palantir coined and built its early delivery model around the FDE role in the early 2010s, embedding engineers with customers (often intelligence agencies) who could not fully specify requirements up front."
+    domain: fde-fundamentals
+  - id: q2
+    type: single
+    prompt: "What is the core distinction between a forward deployed engineer and an implementation engineer?"
+    options:
+      - "An FDE writes general-purpose production code and owns it through to a customer's environment, while an implementation engineer typically configures a vendor product within its existing boundaries"
+      - "An FDE never talks to customers directly"
+      - "An implementation engineer always earns more"
+      - "There is no meaningful difference between the two roles"
+    correct: 0
+    explanation: "Implementation engineering is bounded by what the vendor's product can be configured to do; forward deployed engineering involves writing and shipping general-purpose software against the customer's own systems and data, which requires broader engineering skill."
+    domain: fde-fundamentals
+  - id: q3
+    type: multi
+    prompt: "Which of these are commonly cited traits companies look for when hiring FDEs?"
+    options:
+      - "Comfort operating with an ambiguous, unscoped starting brief"
+      - "Strong general-purpose software engineering skill, not just product configuration"
+      - "A guarantee of deep prior expertise in every customer's industry before starting"
+      - "Willingness to ship a working prototype quickly rather than polish a design document"
+    correct: [0, 1, 3]
+    explanation: "FDEs are expected to handle ambiguity, write real code, and bias toward shipping fast. Deep prior domain expertise in every possible industry is not realistic or expected — FDEs are expected to get functionally competent in a new domain quickly instead."
+    domain: fde-fundamentals
+  - id: q4
+    type: order
+    prompt: "Order the stages of a typical FDE engagement lifecycle."
+    items:
+      - "Discovery: shadow users, find the high-value workflow, define measurable success"
+      - "Prototype: build a thin, working slice quickly to react to"
+      - "Pilot: run a scoped, real version of the workflow with defined handoff criteria"
+      - "Production handoff: system meets the agreed criteria and takes over the live workflow"
+    correctOrder: [0, 1, 2, 3]
+    explanation: "Discovery defines what's worth building and how success will be measured before any code is written; the prototype tests that direction quickly; the pilot validates it against real data and real constraints; production handoff only happens once agreed criteria are met."
+    domain: engagement-lifecycle
+  - id: q5
+    type: match
+    prompt: "Match each role to how it typically delivers value to a customer."
+    left: ["Traditional consultant", "Implementation engineer", "Forward deployed engineer"]
+    right: ["Configures a vendor product within its defined capabilities", "Writes and ships working software, owned through to production", "Produces a plan or recommendation for the customer to execute"]
+    correctPairs: [[0, 2], [1, 0], [2, 1]]
+    explanation: "A consultant's deliverable is typically a plan someone else executes; an implementation engineer configures within a product's boundaries; an FDE writes and owns general-purpose software through to a measurable production outcome."
+    domain: fde-fundamentals
+  - id: q6
+    type: predict
+    prompt: "A customer's executive sponsor asks for 'a chatbot to help customers check claim status.' During discovery, the FDE learns customers rarely call in during the actual slow part of the process, which happens upstream before an adjuster even starts review. What should the FDE most likely do next?"
+    code: |
+      Discovery findings:
+      - Executive ask: customer-facing chatbot for claim status
+      - Observed: customers rarely call during the slow phase
+      - Slow phase: document cross-referencing before adjuster review, ~25 min/claim
+    language: text
+    options:
+      - "Reframe the scope toward the document cross-referencing bottleneck, since that's where the measurable pain actually is"
+      - "Build the chatbot as requested, since the executive sponsor asked for it"
+      - "Decline the engagement because the original ask was flawed"
+      - "Build both the chatbot and the cross-referencing tool simultaneously to cover all bases"
+    correct: 0
+    explanation: "Good discovery means finding the highest-value workflow, not the most visible one. When evidence shows the executive's ask doesn't address the actual bottleneck, the FDE's job is to redirect the scope toward the workflow where a fix would measurably help, not to build the originally requested but low-value feature."
+    domain: problem-discovery
+  - id: q7
+    type: single
+    prompt: "Why does defining a measurable success target (a number, a baseline, a time frame) matter before a pilot starts?"
+    options:
+      - "It's a contractual formality with no technical purpose"
+      - "Without it, there's no way to know whether the pilot worked or to justify expanding it into production"
+      - "It's only needed for regulated industries"
+      - "It guarantees the pilot will succeed"
+    correct: 1
+    explanation: "Vague goals like 'faster' or 'better' can't be evaluated. A concrete baseline and target (e.g. cut review time from 25 to 8 minutes) is what lets everyone agree, after the pilot, whether it actually worked and whether production investment is justified."
+    domain: problem-discovery
+  - id: q8
+    type: multi
+    prompt: "Which practices help a pilot actually reach production, rather than staying a disconnected demo?"
+    options:
+      - "Using real or realistically representative data and integration points during the pilot"
+      - "Agreeing on production handoff criteria before the pilot starts"
+      - "Scoping the pilot as a narrow but real end-to-end slice of the workflow"
+      - "Maximizing the number of use cases covered, even shallowly, to impress stakeholders"
+    correct: [0, 1, 2]
+    explanation: "Real data surfaces the hard problems early; agreed handoff criteria avoid an open-ended 'keep improving it' loop; a narrow real slice teaches more than broad shallow coverage. Chasing breadth for its own sake tends to produce a demo that looks impressive but doesn't hold up under real conditions."
+    domain: pilot-scoping
+  - id: q9
+    type: short
+    prompt: "Explain why rapid prototyping (a working demo in days, not months) is central to the FDE approach to discovery, in your own words."
+    rubric:
+      - criterion: "Mentions that customers are often better at reacting to something concrete than specifying requirements in the abstract"
+        points: 1
+      - criterion: "Mentions that fast prototypes surface wrong assumptions cheaply, before significant investment is made"
+        points: 1
+    explanation: "Customers frequently can't fully articulate what they need until they see something real to react to. A fast, thin prototype turns an abstract 'what do you want' conversation into a concrete 'is this right' one, and any wrong assumptions get caught while they're still cheap to fix."
+    domain: rapid-prototyping
+  - id: q10
+    type: single
+    prompt: "During a shadow-mode pilot, the team discovers that some scanned documents are too low-quality for the extraction step to handle reliably. What does this situation illustrate about the FDE engagement lifecycle?"
+    options:
+      - "That the lifecycle includes feedback loops: a pilot finding can send the team back to rework the prototype rather than proceeding straight to production"
+      - "That the pilot has failed and the engagement should end immediately"
+      - "That discovery is unnecessary once a prototype exists"
+      - "That production handoff criteria should be dropped to keep the timeline on track"
+    correct: 0
+    explanation: "The FDE lifecycle isn't a strict waterfall. A pilot finding that breaks an assumption (like document quality) is expected to loop back into rework before moving forward, rather than pushing an unvalidated system into production just to hit a schedule."
+    domain: engagement-lifecycle

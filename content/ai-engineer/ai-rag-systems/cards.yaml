@@ -1,0 +1,31 @@
+cards:
+  - id: c1
+    front: "What problem does RAG solve that parametric knowledge alone can't?"
+    back: "Grounding answers in data that's private, current, or too large to fit in training — updated by changing the data, not by retraining the model."
+  - id: c2
+    front: "What is the core tradeoff in choosing a chunk size?"
+    back: "Smaller chunks stay topically focused but risk losing needed context; larger chunks keep context but dilute the embedding across multiple topics."
+  - id: c3
+    front: "What does document-aware chunking do differently from fixed-size chunking?"
+    back: "It splits on natural structural boundaries (headings, tables, function bodies) instead of a fixed token count, avoiding mid-structure cuts."
+  - id: c4
+    front: "What is Anthropic's Contextual Retrieval technique?"
+    back: "Prepending a short LLM-generated blurb situating each chunk within its source document, before embedding and BM25 indexing, to fix context lost at chunk boundaries."
+  - id: c5
+    front: "Why pair vector search with BM25 in a hybrid search setup?"
+    back: "Vector search captures semantic similarity but under-ranks exact matches (codes, names, IDs); BM25's term-frequency scoring covers that gap."
+  - id: c6
+    front: "What does a reranker do that initial retrieval doesn't?"
+    back: "Scores the query and each candidate chunk jointly (cross-encoder) for higher accuracy, applied only to a small shortlist because it's too expensive to run over the whole corpus."
+  - id: c7
+    front: "What does Recall@k measure in retrieval evaluation?"
+    back: "The fraction of truly relevant chunks that appear anywhere in the top k retrieved results."
+  - id: c8
+    front: "What does Mean Reciprocal Rank (MRR) measure?"
+    back: "The average of 1/rank of the first relevant result across queries — how close to the top the right chunk lands, not just whether it's present."
+  - id: c9
+    front: "What does 'faithfulness' measure in RAG generation evaluation?"
+    back: "The fraction of claims in the generated answer that are actually supported by the retrieved context — a check against ungrounded or embellished claims."
+  - id: c10
+    front: "If recall@k is high but faithfulness is low, where's the likely fault?"
+    back: "In generation, not retrieval — the right context is being found, but the model isn't sticking to it when writing the answer."

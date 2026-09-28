@@ -1,0 +1,31 @@
+cards:
+  - id: c1
+    front: "What is an iFlow?"
+    back: "A visually designed integration flow in SAP Cloud Integration, compiled and run as an Apache Camel route on a managed runtime."
+  - id: c2
+    front: "When should you use the SOAP adapter?"
+    back: "When the partner system exposes a WSDL-based web service and you can import the WSDL or point at a SOAP endpoint."
+  - id: c3
+    front: "When should you use the IDoc adapter, and what does it typically require for on-premise systems?"
+    back: "For SAP-to-SAP or SAP-to-middleware document exchange (orders, deliveries, master data); reaching an on-premise SAP system usually requires SAP Cloud Connector."
+  - id: c4
+    front: "What is a Content Modifier used for?"
+    back: "Setting or reading message headers, properties, and the body — e.g. capturing a value into a property before the body is transformed."
+  - id: c5
+    front: "What is the difference between Splitter and Gather?"
+    back: "Splitter breaks one message into many independent messages; Gather recombines the results of those messages back into an aggregate."
+  - id: c6
+    front: "When should you prefer Message Mapping over a Groovy script?"
+    back: "Whenever the transformation is expressible as field-to-field mapping — it's more readable and maintainable than a script."
+  - id: c7
+    front: "What does an exception subprocess do in an iFlow?"
+    back: "Catches unhandled exceptions from the main process and lets you branch to error handling instead of the flow simply failing."
+  - id: c8
+    front: "What is the common resilience pattern for transient failures in SAP Cloud Integration?"
+    back: "Route the failed message to a JMS retry queue so it survives runtime restarts and gets bounded retry attempts before landing in a dead-letter queue."
+  - id: c9
+    front: "What does a Looping Process Call do?"
+    back: "Invokes a separate, reusable local integration process as a subroutine, optionally once per item in a list — useful for shared logic like enrichment or error handling."
+  - id: c10
+    front: "What can you inspect in the Monitor perspective of Integration Suite?"
+    back: "Message processing status per iFlow, an individual message's processing log and payload trace, and JMS queue depth/age for messages awaiting retry."

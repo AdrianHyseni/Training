@@ -1,0 +1,122 @@
+passThreshold: 0.75
+questions:
+  - id: q1
+    type: single
+    prompt: "Which three fields are required to make a minimal Messages API request?"
+    options:
+      - "model, max_tokens, messages"
+      - "model, system, temperature"
+      - "api_key, prompt, model"
+      - "messages, stream, stop_sequence"
+    correct: 0
+    explanation: "Every Messages API call needs a model to route the request, a max_tokens ceiling on the response, and the messages array carrying the conversation. Everything else (system, streaming, tools, thinking) is optional on top of that base shape."
+    domain: claude-api
+  - id: q2
+    type: single
+    prompt: "The Messages API is stateless. What does this mean in practice for a multi-turn chat application?"
+    options:
+      - "The client must resend the full conversation history in the messages array on every request"
+      - "The API automatically remembers prior turns using the same API key"
+      - "Only the first message in a conversation needs to be sent; the API tracks the rest by session ID"
+      - "Conversations are capped at two turns unless a database add-on is enabled"
+    correct: 0
+    explanation: "Because the API has no memory between calls, the calling application is responsible for maintaining conversation state and resending it — every prior user and assistant turn — as the messages array on each new request."
+    domain: claude-api
+  - id: q3
+    type: multi
+    prompt: "Which of these are true about max_tokens?"
+    options:
+      - "It is a hard upper bound on generated output, not a target length"
+      - "Hitting it produces a response truncated mid-thought"
+      - "The model always generates exactly max_tokens tokens"
+      - "An application should check stop_reason to detect when output was cut off at max_tokens"
+    correct: [0, 1, 3]
+    explanation: "max_tokens caps how much the model may generate; the model typically stops earlier on its own. When it does hit the cap, the response is cut off mid-thought, which is why checking stop_reason for a max_tokens value is necessary to avoid silently shipping truncated answers."
+    domain: claude-api
+  - id: q4
+    type: order
+    prompt: "Order these events as they occur in a single streamed content block."
+    items:
+      - "content_block_start"
+      - "content_block_delta (one or more)"
+      - "content_block_stop"
+      - "message_delta with the final stop_reason"
+    correctOrder: [0, 1, 2, 3]
+    explanation: "Each content block opens with content_block_start, streams its incremental content through one or more content_block_delta events, and closes with content_block_stop; only after all content blocks close does the message_delta event report the final stop_reason for the whole response."
+    domain: claude-api
+  - id: q5
+    type: match
+    prompt: "Match each stop_reason to what it indicates."
+    left: ["end_turn", "max_tokens", "tool_use", "refusal"]
+    right:
+      - "The model wants to call a tool before continuing"
+      - "The model finished its response naturally"
+      - "A safety-related decline occurred"
+      - "The response was truncated at the configured output ceiling"
+    correctPairs: [[0, 1], [1, 3], [2, 0], [3, 2]]
+    explanation: "end_turn means a natural, complete finish; max_tokens means the output was cut off at the ceiling you set; tool_use means the model paused to request a tool call; refusal means a safety decline occurred, which an application should detect explicitly rather than treat as ordinary text."
+    domain: claude-api
+  - id: q6
+    type: predict
+    prompt: "A support-ticket triage service sends this request and only ever reads content[0].text without checking stop_reason. What is the most likely production risk?"
+    code: |
+      {
+        "model": "claude-sonnet-5",
+        "max_tokens": 40,
+        "messages": [{"role": "user", "content": "Summarize this 3-page ticket and explain your reasoning in detail: ..."}]
+      }
+    language: json
+    options:
+      - "A long, detailed reasoning response could get truncated by the low max_tokens value, and the code would silently treat the cut-off text as a complete answer"
+      - "The request will fail outright because max_tokens is too low to be valid"
+      - "The API will automatically raise max_tokens to fit the requested detail level"
+      - "Streaming is required whenever max_tokens is below 100, so this request errors"
+    correct: 0
+    explanation: "Asking for a detailed explanation while capping output at 40 tokens is very likely to hit the max_tokens stop reason. Code that never checks stop_reason has no way to distinguish a complete answer from a truncated one, which is exactly the failure mode the lesson calls out."
+    domain: claude-api
+  - id: q7
+    type: single
+    prompt: "Why does the Messages API expose a dedicated token-counting endpoint instead of relying on word or character counts?"
+    options:
+      - "Because pricing, context window limits, and rate limits are all denominated in Claude's own tokens, which don't map cleanly to words or characters"
+      - "Because token counting is only needed for images, never for text"
+      - "Because the SDKs cannot report usage.input_tokens after a real request"
+      - "Because max_tokens is measured in characters, not tokens"
+      - "Because streaming responses skip usage reporting entirely"
+    correct: 0
+    explanation: "Claude processes text as tokens (roughly word/subword chunks), and billing, context windows, and rate limits are all counted in tokens — a count that a generic word or character count won't accurately predict. The dedicated endpoint lets you get an accurate count before spending anything on generation."
+    domain: claude-api
+  - id: q8
+    type: multi
+    prompt: "Which of these are true about rate limits (429 responses) versus a monthly spend cap (also surfaced as a usage-limit error)?"
+    options:
+      - "A rate-limit 429 is typically accompanied by a retry-after header telling you how long to wait"
+      - "Both conditions are permanent and require contacting support before any further requests can succeed"
+      - "Rate limits are evaluated along dimensions like requests and tokens per minute, per model"
+      - "Treating rate limiting as an expected, handled condition (backoff/retry or queuing) is better production practice than treating it as an exceptional crash"
+    correct: [0, 2, 3]
+    explanation: "A short-term rate limit is designed to be retried after a wait, and the API tells you how long via a header; it's evaluated per dimension (requests, input tokens, output tokens) and per model. A spend cap is a different, longer-lived condition. Robust applications treat ordinary rate limiting as routine and handle it with backoff rather than surfacing it as an unhandled failure."
+    domain: claude-api
+  - id: q9
+    type: short
+    prompt: "A junior engineer wants to build a 20-turn customer support chatbot by sending only the user's latest message on each request, to 'save tokens.' Explain why this won't work and what they should do instead."
+    rubric:
+      - criterion: "Identifies that the API is stateless and has no memory of prior turns, so sending only the latest message loses all conversation context"
+        points: 1
+      - criterion: "States that the client must resend the full (or deliberately trimmed/summarized) conversation history as the messages array on each request"
+        points: 1
+      - criterion: "Mentions a real tradeoff of doing so (cost/latency growth, or the option of trimming/summarizing history rather than sending everything unmodified)"
+        points: 1
+    explanation: "The Messages API has no server-side memory between calls, so the client is the only place conversation state can live. Sending just the latest message means Claude sees each message in isolation with no idea what was said before. The fix is resending the full history (or a deliberately managed, trimmed/summarized version of it) as the messages array every time — accepting that cost and latency grow with conversation length unless you manage that history actively."
+    domain: claude-api
+  - id: q10
+    type: single
+    prompt: "Why should application code read the ANTHROPIC_MODEL (or equivalent) value from configuration rather than hard-coding a specific model ID like \"claude-sonnet-5\" throughout the codebase?"
+    options:
+      - "Anthropic ships new models over time, and hard-coding an ID scatters an upgrade across every call site instead of one config change"
+      - "Hard-coded model IDs are rejected by the API for security reasons"
+      - "Only streaming requests are allowed to specify a model ID directly"
+      - "Model IDs must be re-generated per request using the token-counting endpoint"
+    correct: 0
+    explanation: "Model identifiers, capabilities, and pricing change as Anthropic releases new models. Centralizing the model ID in configuration (an env var, for example) means moving to a newer model is a one-line config change rather than a hunt through the codebase — this is why CLAUDE.md-style guidance for this project insists the model id come from configuration, never a hard-coded literal."
+    domain: claude-api

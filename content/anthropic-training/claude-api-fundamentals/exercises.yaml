@@ -1,0 +1,71 @@
+exercises:
+  - id: ex1
+    prompt: >-
+      Your team is building a chat feature for an internal knowledge-base
+      tool. Users can ask follow-up questions in the same conversation, and
+      some conversations run to 40+ turns over a working session. Design how
+      your backend will manage conversation state given that the Messages
+      API is stateless, and explain what you'd do as conversations grow
+      long. Cover: where history lives, what you send on each request, and
+      at least one concrete strategy for handling very long conversations.
+    modelAnswer: |
+      Conversation state lives server-side, in a database table keyed by a
+      conversation ID (e.g. `conversation_id`, `turn_index`, `role`, `content`,
+      `created_at`). On each new user message, the backend loads that
+      conversation's turns in order, appends the new user turn, and sends the
+      full ordered list as the `messages` array to the Messages API — the API
+      itself never stores anything between calls, so this table is the only
+      source of truth for "what has been said so far."
+
+      As conversations grow long (40+ turns), sending the entire unmodified
+      history on every request gets expensive and eventually risks
+      approaching the model's context window. Two complementary strategies:
+      (1) prompt caching on the stable prefix of the conversation, so
+      resending history doesn't mean re-processing it in full every time, and
+      (2) a trimming/summarization strategy — for example, keep the most
+      recent N turns verbatim and replace older turns with a periodically
+      regenerated summary turn, so the array sent to the API stays bounded
+      instead of growing without limit. Either way, the resend behavior is
+      explicit and tested, not left to "whatever the API happens to remember,"
+      since it remembers nothing.
+    rubric:
+      - criterion: "States clearly that conversation state must be stored by the application (e.g. a database), not the API"
+        points: 2
+      - criterion: "Describes sending the full ordered history as messages on each request"
+        points: 1
+      - criterion: "Proposes a concrete strategy for bounding cost/context growth in long conversations (trimming, summarization, and/or caching)"
+        points: 2
+  - id: ex2
+    prompt: >-
+      A teammate wants to ship a feature that calls the Messages API directly
+      from client-side JavaScript in the browser, using an API key embedded
+      in the frontend bundle, "to avoid the extra network hop through our own
+      backend." Write a short design note explaining why this is a problem
+      and what you'd do instead, referencing what happens when a request is
+      malformed or rate-limited.
+    modelAnswer: |
+      Embedding an API key in a browser bundle exposes it to anyone who opens
+      dev tools or views the bundled JS — it is not a secret at that point,
+      regardless of minification or obfuscation. Anyone who extracts it can
+      make requests against your organization's usage and billing, and you'd
+      have no way to distinguish their traffic from your own users' traffic
+      in your own rate-limit and spend accounting. Calls to the Messages API
+      belong on a server you control, where the key stays in environment
+      configuration, never shipped to a device.
+
+      The fix: keep a thin backend endpoint that receives the user's message
+      from the frontend, adds the API key server-side, calls the Messages
+      API, and returns the result (or streams it back over your own
+      connection to the browser). This also gives you one place to handle
+      errors and rate limits correctly — for example, catching a 429 with its
+      retry-after header and deciding whether to queue, backoff-and-retry, or
+      surface a friendly "try again shortly" message to the user — instead of
+      every browser client independently mishandling raw API errors (and
+      potentially retrying in a way that makes a rate-limit situation worse).
+    rubric:
+      - criterion: "Identifies that a client-side API key is effectively public/extractable, not a secret"
+        points: 2
+      - criterion: "Recommends a server-side proxy/backend endpoint instead of direct browser-to-API calls"
+        points: 2
+      - criterion: "Connects the backend boundary to centralized, correct error/rate-limit handling"
+        points: 1

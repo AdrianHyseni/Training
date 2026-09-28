@@ -1,0 +1,119 @@
+passThreshold: 0.75
+questions:
+  - id: q1
+    type: single
+    prompt: "What is the main reason to use RAG instead of relying on an LLM's parametric knowledge alone?"
+    options:
+      - "It makes the model respond faster"
+      - "It grounds answers in your own, up-to-date data without retraining the model"
+      - "It removes the need for any prompt engineering"
+      - "It guarantees the model can never hallucinate"
+    correct: 1
+    explanation: "Parametric knowledge is frozen at training time and can't reflect your private or fast-changing data. Retrieval lets you ground answers in current source documents and update them by changing the data, not the model — though it reduces, not eliminates, hallucination risk."
+    domain: rag-fundamentals
+  - id: q2
+    type: multi
+    prompt: "Which of these are genuine tradeoffs when choosing a chunk size for RAG ingestion?"
+    options:
+      - "Smaller chunks are more topically coherent but risk losing surrounding context"
+      - "Larger chunks preserve context but can dilute a chunk's embedding across multiple topics"
+      - "Chunk size has no effect on retrieval quality, only on storage cost"
+      - "Overlap between chunks can help preserve facts that fall near a chunk boundary"
+    correct: [0, 1, 3]
+    explanation: "Chunk size is a real tradeoff between topical focus and preserved context — it directly affects what gets embedded and therefore what gets retrieved. Overlap is a common mitigation for boundary-split facts. Claiming it only affects storage cost ignores its effect on retrieval quality."
+    domain: chunking
+  - id: q3
+    type: order
+    prompt: "Order the stages of a RAG pipeline from document ingestion through to the final answer."
+    items:
+      - "Chunk source documents"
+      - "Embed chunks and store in a vector/keyword index"
+      - "Retrieve top-k candidates for a query"
+      - "Rerank candidates"
+      - "Generate the answer using reranked context"
+    correctOrder: [0, 1, 2, 3, 4]
+    explanation: "Ingestion (chunk, embed, store) happens ahead of time; at query time the system retrieves a broad candidate set cheaply, reranks that smaller set with a more precise model, and only then generates the answer from the reranked context."
+    domain: rag-fundamentals
+  - id: q4
+    type: match
+    prompt: "Match each RAG evaluation metric to what it measures."
+    left: ["Recall@k", "Mean Reciprocal Rank (MRR)", "Faithfulness", "Answer relevance"]
+    right:
+      - "Whether the generated answer actually addresses the question asked"
+      - "The fraction of relevant chunks that appear anywhere in the top k retrieved results"
+      - "How high up the first relevant chunk ranks, averaged across queries"
+      - "What fraction of claims in the generated answer are supported by the retrieved context"
+    correctPairs: [[0, 1], [1, 2], [2, 3], [3, 0]]
+    explanation: "Recall@k and MRR are retrieval metrics — did the right chunk get found, and how close to the top. Faithfulness and answer relevance are generation metrics — did the model use the evidence correctly and answer the actual question. Keeping the two categories separate is what makes RAG failures diagnosable."
+    domain: evaluation
+  - id: q5
+    type: predict
+    prompt: "A team evaluates their RAG system and finds recall@5 = 0.91 but faithfulness = 0.52 (many answer claims aren't supported by retrieved context). What should they investigate first?"
+    code: |
+      recall@5: 0.91
+      MRR: 0.83
+      faithfulness: 0.52
+      answer_relevance: 0.88
+    language: text
+    options:
+      - "The chunking strategy, since retrieval is clearly broken"
+      - "The embedding model, since it's failing to find relevant chunks"
+      - "The generation prompt or the model's use of retrieved context, since retrieval is already working well"
+      - "Nothing — these numbers indicate a healthy system"
+    correct: 2
+    explanation: "High recall@k and MRR mean the retriever is reliably surfacing the right chunks near the top. Low faithfulness with strong retrieval numbers points to the generation step — the model is not sticking to the evidence it was given — so the fix is in the prompt (e.g. requiring citations) rather than in retrieval."
+    domain: evaluation
+  - id: q6
+    type: single
+    prompt: "Why does hybrid search combine vector similarity with BM25 (keyword) search rather than using vector search alone?"
+    options:
+      - "BM25 is always more accurate than vector search"
+      - "Vector search is computationally cheaper, so BM25 is only needed as a fallback"
+      - "Vector embeddings can under-rate exact matches like error codes, SKUs, or names that BM25 handles well"
+      - "BM25 removes the need for reranking"
+    correct: 2
+    explanation: "Dense embeddings capture semantic meaning but are comparatively weak at exact lexical matches — a rare term, code, or identifier can rank lower than a merely topically-related passage. BM25's term-frequency scoring is strong exactly where embeddings are weak, so combining both covers more failure modes than either alone."
+    domain: hybrid-search
+  - id: q7
+    type: single
+    prompt: "Why is reranking typically applied only to the top 20-100 retrieved candidates rather than the entire corpus?"
+    options:
+      - "Rerankers can only process a fixed, small number of documents ever"
+      - "Cross-encoder rerankers score the query and each candidate jointly, which is more accurate but too expensive to run over millions of chunks"
+      - "Reranking is illegal to run at scale"
+      - "The reranker replaces the need for an initial retrieval step entirely"
+    correct: 1
+    explanation: "A cross-encoder reranker looks at the query and a candidate chunk together, which is more accurate than comparing independent pre-computed embeddings but far more expensive per comparison. Running it only on a retrieval system's smaller shortlist makes that accuracy affordable."
+    domain: reranking
+  - id: q8
+    type: multi
+    prompt: "According to Anthropic's published Contextual Retrieval technique, which of these are accurate descriptions of the approach?"
+    options:
+      - "It prepends a short, LLM-generated explanatory blurb to each chunk before embedding and keyword indexing"
+      - "It replaces vector search entirely with a pure keyword index"
+      - "It is reported to reduce retrieval failure rate versus a baseline, with the largest reduction when combined with BM25 and reranking together"
+      - "It requires manually rewriting every chunk by hand"
+    correct: [0, 2]
+    explanation: "Contextual Retrieval generates a short situating blurb per chunk with an LLM and prepends it before both embedding and BM25 indexing; Anthropic reports the largest reported reduction in retrieval failure rate when it's combined with BM25 and reranking, not when replacing vector search or requiring manual rewriting."
+    domain: chunking
+  - id: q9
+    type: short
+    prompt: "A support copilot's RAG system keeps citing an outdated version of an API doc even though a newer chunk exists in the index. Name two concrete changes to the retrieval or generation pipeline that would reduce this."
+    rubric:
+      - criterion: "Mentions filtering retrieval by metadata (e.g. product/doc version) rather than relying on relevance ranking alone"
+        points: 1
+      - criterion: "Mentions a generation-side fix, such as requiring the prompt to cite sources per claim or excluding stale documents from the index/re-ingesting on update"
+        points: 1
+    explanation: "Similarity ranking alone doesn't know that one chunk is stale — the fix usually pairs a retrieval-side constraint (filter by version/recency metadata before ranking) with a generation-side one (require per-claim citations so mixing sources is visible and catchable), rather than hoping ranking alone surfaces the current version."
+    domain: production-rag
+  - id: q10
+    type: single
+    prompt: "Per this module's accuracy guidance, why should exact percentage figures like Anthropic's reported Contextual Retrieval failure-rate reductions be flagged with a source to verify rather than stated as fixed facts?"
+    options:
+      - "Because such benchmark figures are usually fabricated by vendors"
+      - "Because specific vendor-reported numbers can be updated or superseded, so the durable lesson is the technique and direction of improvement, not the exact percentage"
+      - "Because percentages are never useful in technical writing"
+      - "Because Anthropic does not publish any evaluation methodology"
+    correct: 1
+    explanation: "Vendor-reported benchmark numbers reflect a specific evaluation setup at a point in time and can change as models, datasets, or methods are updated. The durable, teachable fact is that contextual chunking plus hybrid search plus reranking compound to reduce retrieval failures — the exact percentage is a detail worth checking against the current source."
+    domain: rag-fundamentals

@@ -1,0 +1,31 @@
+cards:
+  - id: c1
+    front: "How does an implementation engineer differ from a functional consultant?"
+    back: "The consultant documents and recommends how a business process should work; the implementation engineer builds it — configuration, data migration, integrations, and test plans."
+  - id: c2
+    front: "What are the three possible outcomes of fit-gap analysis for a requirement?"
+    back: "Fit (platform does it out of the box), gap (needs a workaround or customization), or business process change (adapt the business to the platform's standard capability)."
+  - id: c3
+    front: "What makes a solution design document (SDD) 'good'?"
+    back: "It's specific enough that a different engineer could build from it — concrete configuration and rules, not vague statements like 'configure approval routing.'"
+  - id: c4
+    front: "What's the main tradeoff between configuration and customization?"
+    back: "Configuration is faster and lower-risk on upgrades since the vendor tests it; customization is more flexible but adds ongoing maintenance and upgrade risk."
+  - id: c5
+    front: "List the five stages of the data migration lifecycle."
+    back: "Extract, cleanse, map, load, reconcile."
+  - id: c6
+    front: "Why cleanse data before it migrates rather than after?"
+    back: "Fixing duplicates, inconsistent formats, and orphaned records is far cheaper in the source system than after users are already relying on the migrated data in production."
+  - id: c7
+    front: "What does SIT verify, and who runs it?"
+    back: "System integration testing verifies technical correctness — data flow, batch jobs, error handling — between integrated systems; it's run by the implementation team."
+  - id: c8
+    front: "What does UAT verify, and who runs it?"
+    back: "User acceptance testing verifies the system supports real business processes; it's run by actual business users following real-world scenarios, not the implementation team."
+  - id: c9
+    front: "What are the two things that separate a professional cutover runbook from an improvised one?"
+    back: "Explicit go/no-go checkpoints with a named decision owner, and a rollback plan that's actually been tested/rehearsed."
+  - id: c10
+    front: "What is hypercare and why does it matter?"
+    back: "An elevated-support period (typically 1-4 weeks) right after go-live, where the implementation team is on hand because production at full scale surfaces issues UAT never fully replicated."

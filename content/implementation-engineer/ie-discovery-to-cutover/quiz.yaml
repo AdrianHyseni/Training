@@ -1,0 +1,116 @@
+passThreshold: 0.75
+questions:
+  - id: q1
+    type: single
+    prompt: "How does an implementation engineer's role differ most from a pre-sales solutions engineer's?"
+    options:
+      - "The implementation engineer builds and delivers the solution after the deal is signed, while the solutions engineer builds demos to win the deal"
+      - "The implementation engineer never talks to business stakeholders"
+      - "The solutions engineer is responsible for data migration"
+      - "There is no meaningful difference between the two roles"
+    correct: 0
+    explanation: "Solutions engineers work pre-sales to win the deal with demos and proofs of concept; once signed, the implementation engineer inherits that scope and is accountable for actually building, migrating, and testing the real system."
+    domain: lifecycle
+  - id: q2
+    type: multi
+    prompt: "Which of these are goals of a discovery workshop?"
+    options:
+      - "Surface the exceptions and workarounds users rely on, not just the happy path"
+      - "Restate the sales pitch as a requirements document"
+      - "Understand why existing configuration exists before changing it"
+      - "Identify which requirements are fits, gaps, or candidates for process change"
+    correct: [0, 2, 3]
+    explanation: "Good discovery digs into real, current behavior including exceptions, understands the reasons behind existing setup, and feeds directly into fit-gap analysis — it isn't just validating what sales already promised."
+    domain: discovery
+  - id: q3
+    type: order
+    prompt: "Order these stages of the data migration lifecycle."
+    items:
+      - "Extract"
+      - "Cleanse"
+      - "Map"
+      - "Load"
+      - "Reconcile"
+    correctOrder: [0, 1, 2, 3, 4]
+    explanation: "Data must be pulled from the source (extract), fixed before it moves (cleanse), translated to the target's structure (map), moved (load), and then checked that what landed matches what was extracted (reconcile)."
+    domain: data-migration
+  - id: q4
+    type: match
+    prompt: "Match each project phase to what it primarily verifies."
+    left: ["SIT", "UAT", "Hypercare", "Reconciliation"]
+    right:
+      - "Business users confirm the system supports real processes"
+      - "Technical correctness of integrations and data flow between systems"
+      - "Migrated data matches the source, via counts and control totals"
+      - "Elevated support readiness immediately after go-live"
+    correctPairs: [[0, 1], [1, 0], [2, 3], [3, 2]]
+    explanation: "SIT is a technical check run by the implementation team; UAT is a business-process check run by end users; reconciliation confirms migrated data integrity; hypercare is the elevated-support period right after go-live."
+    domain: testing
+  - id: q5
+    type: predict
+    prompt: "A team skips SIT and goes straight from build into UAT with real business users. What is the most likely consequence?"
+    code: |
+      Build complete -> UAT (skip SIT) -> Cutover
+    language: text
+    options:
+      - "Business users spend limited UAT time hitting integration defects instead of validating business processes"
+      - "The project will finish faster with no downside"
+      - "UAT becomes unnecessary once SIT is skipped"
+      - "Data migration accuracy improves"
+    correct: 0
+    explanation: "SIT exists to catch technical/integration defects before business users ever see the system; skipping it means those defects surface during UAT instead, burning the business's limited testing time and goodwill on bugs rather than process validation."
+    domain: testing
+  - id: q6
+    type: single
+    prompt: "Why do experienced implementation engineers generally prefer configuration over customization when both can satisfy a requirement?"
+    options:
+      - "Customization is always technically impossible"
+      - "Configuration is typically faster to build, lower upgrade risk, and usually covered by vendor support"
+      - "Configuration requires more code than customization"
+      - "Vendors never support customized systems"
+    correct: 1
+    explanation: "Configuration uses vendor-built, vendor-tested options, so it's faster to implement and carries far less risk of breaking on future platform upgrades than custom code, which the implementation partner or customer must maintain themselves."
+    domain: configuration
+  - id: q7
+    type: single
+    prompt: "What is the main purpose of running a 'mock load' of migrated data weeks before the actual cutover?"
+    options:
+      - "To permanently populate the production system early"
+      - "To rehearse the load process and catch mapping or data errors while there's still time to fix them"
+      - "To replace the need for reconciliation"
+      - "It has no real purpose beyond checking a box"
+    correct: 1
+    explanation: "A mock load is a rehearsal: it exercises the full extract-map-load-reconcile cycle on realistic data early enough that mapping bugs or data quality problems can be fixed well before the high-stakes cutover window."
+    domain: data-migration
+  - id: q8
+    type: multi
+    prompt: "Which elements should a professional cutover runbook include?"
+    options:
+      - "Explicit go/no-go checkpoints with a named decision owner"
+      - "A tested rollback procedure, not just an informal plan to 'figure it out'"
+      - "Steps with owners, expected duration, and a verification check"
+      - "An assumption that nothing will go wrong, so no fallback is needed"
+    correct: [0, 1, 2]
+    explanation: "A real runbook has explicit go/no-go decision points with a named owner, a rehearsed rollback plan, and each step assigned an owner with a way to verify it succeeded — assuming nothing will go wrong is exactly what a runbook exists to guard against."
+    domain: cutover
+  - id: q9
+    type: short
+    prompt: "Give two reasons hypercare exists as a distinct phase after go-live, rather than handing off straight to standard support."
+    rubric:
+      - criterion: "Mentions that go-live exposes issues UAT never caught at full production volume/scale"
+        points: 1
+      - criterion: "Mentions the implementation team has context standard support doesn't yet have, enabling faster diagnosis"
+        points: 1
+    explanation: "Hypercare exists because production reveals issues UAT can't fully replicate (real volume, every user's habits at once), and the team that built the system can diagnose problems faster than a support queue that hasn't yet built that context."
+    domain: hypercare
+  - id: q10
+    type: single
+    prompt: "A stakeholder insists a legacy approval workflow must be replicated exactly through custom code, even though the platform's standard approval feature covers 90% of cases. What should the fit-gap analysis prompt the team to consider?"
+    options:
+      - "Immediately approve the customization since the stakeholder asked for it"
+      - "Whether this is a genuine gap requiring customization, or a case for a business process change onto the standard capability"
+      - "Skip discovery and build the customization directly"
+      - "Ignore the request since fit-gap analysis only applies to data migration"
+    correct: 1
+    explanation: "Fit-gap analysis exists precisely to separate genuine platform gaps from cases where adapting the business process to a standard, supported capability is cheaper and more maintainable than customizing — a stakeholder's preference alone doesn't settle that question."
+    domain: configuration

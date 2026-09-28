@@ -1,0 +1,16 @@
+id: sap-cpi-iflows
+line: sap-btp
+title: "SAP Cloud Integration: Building iFlows"
+level: practitioner
+estimatedMinutes: 75
+prerequisites: []
+related: []
+certifications: []
+lastReviewed: "2026-09-28"
+verify:
+  - claim: "The exact list, configuration options, and naming of adapters available in SAP Cloud Integration (SOAP, IDoc, OData, SFTP, HTTP, JMS, and others), including any version- or tenant-specific limits."
+    sourceUrl: "https://help.sap.com/docs/cloud-integration/sap-cloud-integration/connectivity-adapters"
+  - claim: "The exact steps and header names (e.g. SAPJMSRetries, SAP_MarkMessageAsFailed) for configuring exception subprocess retry with the JMS adapter, since these are implementation details that can change between releases."
+    sourceUrl: "https://help.sap.com/docs/integration-suite/sap-integration-suite/sap-cloud-integration-handles-retry"
+  - claim: "Current SAP Integration Suite / Cloud Integration certification names and exam codes."
+    sourceUrl: "https://training.sap.com/certification/"

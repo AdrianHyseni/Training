@@ -1,0 +1,108 @@
+passThreshold: 0.75
+questions:
+  - id: q1
+    type: single
+    prompt: "Which index type suits a JSONB containment query (@>)?"
+    options: [B-tree, GIN, BRIN, Hash]
+    correct: 1
+    explanation: "GIN indexes the keys and values inside a JSONB document, so containment checks can use it directly instead of scanning every row."
+    domain: indexing
+  - id: q2
+    type: multi
+    prompt: "Which of these are true about adding an index to a table?"
+    options:
+      - "It can speed up SELECT queries that filter on the indexed column"
+      - "It has zero cost on INSERT/UPDATE/DELETE"
+      - "It consumes additional disk space"
+      - "The planner may still choose a sequential scan if the index isn't selective enough"
+    correct: [0, 2, 3]
+    explanation: "Indexes speed up selective reads but are not free: they must be maintained on every write and take disk space, and the planner ignores them when a sequential scan is actually cheaper."
+    domain: indexing
+  - id: q3
+    type: order
+    prompt: "Order these steps for diagnosing a slow query."
+    items:
+      - "Run EXPLAIN (ANALYZE, BUFFERS)"
+      - "Compare estimated vs. actual row counts"
+      - "Check whether statistics are stale (ANALYZE)"
+      - "Consider adding or adjusting an index"
+    correctOrder: [0, 1, 2, 3]
+    explanation: "You need the real execution plan before you can compare estimates to reality; a big gap usually means stale stats, which you'd fix before reaching for a new index."
+    domain: indexing
+  - id: q4
+    type: match
+    prompt: "Match each index type to its best use case."
+    left: [B-tree, GIN, BRIN]
+    right: ["Time-series data with natural physical ordering", "Equality and range predicates", "JSONB containment and full-text search"]
+    correctPairs: [[0, 1], [1, 2], [2, 0]]
+    explanation: "B-tree handles equality/range, GIN handles containment/full-text, and BRIN is cheap and effective on huge tables that are already physically ordered by the indexed column."
+    domain: indexing
+  - id: q5
+    type: predict
+    prompt: "What does this EXPLAIN output most likely indicate?"
+    code: |
+      EXPLAIN SELECT * FROM orders WHERE customer_id = 42;
+      -- Seq Scan on orders (cost=0.00..18334.00 rows=1 width=120)
+    language: sql
+    options:
+      - "There is likely no usable index on customer_id"
+      - "The query is already using the fastest possible plan"
+      - "Postgres always prefers sequential scans for small tables"
+      - "This plan proves the table has fewer than 100 rows"
+    correct: 0
+    explanation: "A sequential scan on a query filtering by a single value usually means there's no index on that column (or the planner doesn't consider it selective enough) — worth checking with \\d orders."
+    domain: indexing
+  - id: q6
+    type: single
+    prompt: "Why might a partial index dramatically outperform a full index on the same column?"
+    options:
+      - "Partial indexes use a different storage engine"
+      - "A smaller index is more likely to fit entirely in memory (shared_buffers)"
+      - "Partial indexes skip the WAL"
+      - "Postgres compresses partial indexes automatically"
+    correct: 1
+    explanation: "A partial index only covers rows matching the WHERE clause, so it can be dramatically smaller — small enough to stay cached in memory, avoiding disk reads entirely."
+    domain: indexing
+  - id: q7
+    type: single
+    prompt: "What does a large gap between estimated and actual row counts in EXPLAIN ANALYZE usually indicate?"
+    options:
+      - "A hardware failure"
+      - "Stale table statistics"
+      - "The query is syntactically invalid"
+      - "The table has no primary key"
+    correct: 1
+    explanation: "The planner's estimates come from table statistics gathered by ANALYZE (often via autovacuum). When data has changed a lot since the last ANALYZE, estimates drift from reality."
+    domain: indexing
+  - id: q8
+    type: multi
+    prompt: "Which scenarios are good candidates for a BRIN index?"
+    options:
+      - "A 2-billion-row event log table, append-only, ordered by timestamp"
+      - "A small 500-row lookup table"
+      - "A table where rows are inserted in random key order"
+      - "A time-series table partitioned by month, queried by date range"
+    correct: [0, 3]
+    explanation: "BRIN indexes summarize block ranges and only pay off when the indexed column correlates with physical row order — huge, naturally time-ordered tables are the classic case."
+    domain: indexing
+  - id: q9
+    type: short
+    prompt: "You added an index but EXPLAIN still shows a sequential scan. List two reasons this could happen."
+    rubric:
+      - criterion: "Mentions the planner judging the index non-selective for this query (e.g. the predicate matches most rows)"
+        points: 1
+      - criterion: "Mentions stale statistics or the table being small enough that a seq scan is cheaper"
+        points: 1
+    explanation: "Common causes: the planner estimates the predicate isn't selective enough to be worth a random-access index scan, or table statistics are stale (fix with ANALYZE) so the estimate itself is wrong."
+    domain: indexing
+  - id: q10
+    type: single
+    prompt: "What is the main downside of adding an index that CLAUDE.md's accuracy rules would call a durable concept rather than a volatile specific?"
+    options:
+      - "Increased write latency and storage, regardless of vendor"
+      - "It only works on AWS RDS"
+      - "It requires a specific Postgres major version"
+      - "It disables autovacuum"
+    correct: 0
+    explanation: "The write/storage tradeoff of indexing is a fundamental, vendor-independent property of B-tree-style indexes — true on any Postgres deployment, which is why it's taught as a durable concept rather than a specific to verify."
+    domain: indexing

@@ -1,0 +1,79 @@
+exercises:
+  - id: ex1
+    prompt: >-
+      A ride-sharing platform's `TripCompleted` event triggers three independent
+      actions: charging the rider's card, crediting the driver's payout balance,
+      and sending a receipt email. Currently a single service does all three
+      synchronously in one HTTP handler, and a timeout partway through has
+      caused riders to be charged with no receipt sent, and drivers occasionally
+      credited twice after a retry. Redesign this using the patterns from this
+      module, and explain your reasoning.
+    modelAnswer: |
+      Split the single synchronous handler into a publish-subscribe fan-out: when
+      a trip completes, the trip service writes the trip row and a `TripCompleted`
+      event to an outbox table in the same transaction (transactional outbox),
+      so the event is guaranteed to be published if and only if the trip was
+      actually recorded as completed. A publisher process reads the outbox and
+      puts the event on a pub-sub channel with three independent subscribers:
+      billing, payouts, and receipts. Each subscriber processes the event on its
+      own schedule and failure domain — a slow email provider no longer delays
+      or endangers the card charge.
+
+      Each subscriber must be idempotent, since pub-sub plus outbox-based
+      publishing only guarantees at-least-once delivery to each. Billing and
+      payouts both use an idempotency key (the trip ID) checked against a table
+      of processed trip IDs before charging or crediting, which fixes the
+      double-credit bug directly: a redelivered event becomes a no-op on the
+      second attempt instead of crediting the driver again. The receipt email
+      being decoupled into its own subscriber fixes the "charged with no
+      receipt" bug too — its failure or slowness no longer blocks or gets
+      bundled with the charge.
+
+      Messages that fail repeatedly (e.g. a rider's card is permanently
+      invalid) should go to a dead-letter queue per subscriber after a bounded
+      number of retries with backoff, rather than blocking that subscriber's
+      queue indefinitely, with alerting so a human investigates.
+    rubric:
+      - criterion: "Proposes decoupling the three actions via a publish-subscribe channel instead of one synchronous handler"
+        points: 2
+      - criterion: "Uses the transactional outbox pattern to atomically tie the event to the trip-completed database change"
+        points: 1
+      - criterion: "Explains idempotency keys (e.g. trip ID) as the fix for the double-credit bug specifically"
+        points: 1
+      - criterion: "Mentions dead-letter queues with retry/backoff for permanently failing messages"
+        points: 1
+  - id: ex2
+    prompt: >-
+      Your team owns a `ShipmentUpdated` message format consumed by four other
+      teams. Product wants to rename the field `status` to `shipmentStatus`
+      because it's ambiguous, and to remove an old `legacyTrackingId` field
+      nobody on your team uses anymore. Write a short design note on how to make
+      these two changes safely.
+    modelAnswer: |
+      Both changes are breaking changes from the consumers' point of view, even
+      though they look like internal cleanup from the producing team's side —
+      the message format is a contract the moment other teams consume it, and
+      "nobody on your team uses it" doesn't mean nobody downstream does.
+
+      For the rename: don't rename the field in place. Add `shipmentStatus` as
+      a new field alongside the existing `status` field, publish both for a
+      migration window, and notify the four consuming teams with a deadline.
+      Track which teams have migrated (e.g. via a compatibility-checking schema
+      registry, or manually confirming with each team) before removing the old
+      `status` field. Only remove it once every known consumer has confirmed
+      the switch, or after a documented deprecation period with monitoring to
+      confirm the old field genuinely has zero remaining readers.
+
+      For `legacyTrackingId`: the same rule applies — the fact that your team
+      doesn't use it says nothing about the four consuming teams. Check actual
+      usage (log which consumers still read that field, or ask directly) before
+      assuming it's safe to remove. If it's confirmed unused, remove it as its
+      own change, documented and versioned separately from the rename so a
+      problem in one doesn't get conflated with the other.
+    rubric:
+      - criterion: "Identifies both changes as breaking, not just internal cleanup, because the message is a contract for other consumers"
+        points: 2
+      - criterion: "Proposes additive-first migration for the rename (new field alongside the old, migration window) rather than an in-place rename"
+        points: 2
+      - criterion: "Insists on verifying actual downstream usage before removing legacyTrackingId rather than assuming it's safe"
+        points: 1

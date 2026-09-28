@@ -1,0 +1,67 @@
+exercises:
+  - id: ex1
+    prompt: >-
+      A mid-size logistics company runs entirely on AWS already (IAM, VPCs,
+      existing Glue ETL jobs for finance reporting). They want to build a new
+      lakehouse for shipment-tracking data: roughly 500GB/day of GPS and
+      scan-event data from trucks and warehouses, needed both for near-real-time
+      dashboards and for a data science team building ETA prediction models in
+      custom Python/Spark. Propose a stack using AWS services and justify each
+      choice.
+    modelAnswer: |
+      Land raw GPS/scan events into S3 (raw/bronze prefix), partitioned by date
+      and source, using a streaming ingestion path (e.g. Kinesis or a managed
+      connector) rather than batch, since dashboards need near-real-time data.
+      Use Glue crawlers/jobs to catalog and clean the data into a curated/silver
+      layer in an open table format (e.g. Iceberg) so it supports upserts as
+      GPS pings get corrected or deduplicated. For the serving layer, load
+      aggregated shipment-status tables into Redshift (or Redshift Serverless)
+      for the BI dashboards, since those need consistent, high-concurrency SQL
+      performance. For the data science team's custom Spark/Python ETA models,
+      point EMR directly at the curated S3 data instead of forcing it through
+      Redshift, since EMR gives them cluster-level control that a managed
+      warehouse doesn't. Use Lake Formation to centrally manage permissions
+      across all of this once, rather than configuring IAM policies separately
+      for Redshift, Glue, and EMR. This fits their existing AWS investment:
+      no new platform commitment, and it reuses their existing IAM/VPC setup
+      and Glue familiarity from the finance pipelines.
+    rubric:
+      - criterion: "Proposes S3 as the storage substrate with clear raw/curated/serving layering"
+        points: 2
+      - criterion: "Assigns Glue to cataloging/ETL and justifies Redshift for BI vs. EMR for custom data-science Spark workloads"
+        points: 2
+      - criterion: "Mentions Lake Formation (or equivalent) for centralized governance across services"
+        points: 1
+      - criterion: "Explicitly ties the recommendation to the company's existing AWS investment, not just general best practice"
+        points: 1
+  - id: ex2
+    prompt: >-
+      An insurance company evaluating Microsoft Fabric asks you: "If OneLake
+      is a single shared lake, why would we still need a separate Warehouse
+      item instead of just querying the Lakehouse directly for everything?"
+      Write a short design note answering this, and note what you'd still
+      want to verify against current Fabric documentation before committing.
+    modelAnswer: |
+      A Fabric Lakehouse (Spark/notebook-oriented, files stored in Delta format)
+      and a Fabric Warehouse (T-SQL, full warehouse transaction semantics) both
+      sit on the same OneLake storage, but they serve different access patterns.
+      The Warehouse gives full, standard T-SQL DDL/DML and stronger transactional
+      guarantees for structured serving-layer tables consumed by many concurrent
+      BI queries — the kind of workload a traditional data warehouse was built
+      for. The Lakehouse is better suited to Spark-based transformation work and
+      semi/unstructured data during the bronze/silver stages. In practice, many
+      Fabric architectures use a Lakehouse for bronze/silver and a Warehouse (or
+      a curated Lakehouse table read via Direct Lake) for gold, rather than
+      forcing every workload through one item type. Because Fabric is still
+      evolving quickly, before committing this design I'd verify: current
+      feature parity between Lakehouse SQL endpoints and Warehouse T-SQL support,
+      any limits on cross-item queries, and current capacity/pricing implications
+      of running both item types side by side, against Microsoft's current Fabric
+      documentation rather than assuming today's feature set is fixed.
+    rubric:
+      - criterion: "Correctly explains that Lakehouse and Warehouse are different compute/access experiences over the same OneLake storage, not duplicated storage"
+        points: 2
+      - criterion: "Gives a reasonable rationale for when each is preferred (Spark/semi-structured vs. T-SQL/serving-layer BI)"
+        points: 2
+      - criterion: "Explicitly flags specifics to verify against current docs rather than asserting them as fixed"
+        points: 1

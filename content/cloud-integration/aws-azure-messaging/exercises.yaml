@@ -1,0 +1,75 @@
+exercises:
+  - id: ex1
+    prompt: >-
+      A ride-hailing platform's `TripCompleted` event needs to reach four
+      independent teams: payments (charge the rider), driver-payouts (credit
+      the driver), receipts (email a receipt), and fraud-detection (which only
+      cares about trips flagged as high-risk by an upstream rules engine, a
+      small fraction of all trips). Design a messaging architecture on AWS (or
+      Azure) covering how the event is distributed, how each consumer is
+      isolated from the others' failures, and how you'd protect against a
+      poison message breaking one consumer permanently. Justify each service
+      choice.
+    modelAnswer: |
+      Publish one `TripCompleted` event to an SNS topic (or Service Bus topic
+      on Azure) as the last step of completing a trip. Payments, driver-payouts,
+      and receipts each own their own SQS queue (Service Bus subscription)
+      subscribed to that topic — this gives fan-out with per-consumer durable
+      buffering: if the receipts service is down, payments and payouts are
+      unaffected, and receipts' backlog just waits in its own queue.
+
+      Fraud-detection is different: it only wants a filtered slice (high-risk
+      trips), not every trip. Rather than subscribing it to the same
+      broadcast topic and having it discard most events, route through
+      EventBridge (or Event Grid): a rule matches events where the risk flag
+      is set and forwards only those to fraud-detection's own queue. This
+      keeps fraud-detection's consumption proportional to what it actually
+      needs, and keeps the filtering logic declarative and out of application
+      code.
+
+      Every queue gets its own dead-letter queue with a maxReceiveCount (e.g.
+      5): if a bug in one consumer causes it to fail on a specific message
+      repeatedly, that message is pulled out after 5 attempts and the other
+      messages keep flowing — the DLQ is inspected, the bug fixed, and the
+      message redriven. Because each of the four consumers has its own queue
+      and DLQ, a poison message or an outage in one never blocks the other
+      three.
+    rubric:
+      - criterion: "Proposes fan-out (SNS/Service Bus topic) with each of payments/payouts/receipts owning its own queue"
+        points: 2
+      - criterion: "Recognizes fraud-detection needs content-based routing (EventBridge/Event Grid rule), not a blanket broadcast subscription"
+        points: 2
+      - criterion: "Specifies a per-queue DLQ with maxReceiveCount to isolate poison messages"
+        points: 1
+  - id: ex2
+    prompt: >-
+      Your team is deciding between an SQS FIFO queue and a standard queue for
+      processing account-balance-change events, where each account's events
+      must apply in the order they occurred, but different accounts' events
+      can be processed in any order relative to each other. A colleague
+      proposes "just use FIFO for everything to be safe." Write a short design
+      note responding to that proposal.
+    modelAnswer: |
+      FIFO is the right choice here, but "use it for everything" is the wrong
+      generalization. The actual requirement is ordering *within* an account,
+      not globally — so set `MessageGroupId` to the account ID. That gives
+      strict per-account ordering and exactly-once processing per group while
+      still letting different accounts' messages be processed in parallel
+      across message groups, which keeps throughput reasonable instead of
+      serializing the entire queue.
+
+      Defaulting to FIFO everywhere else would be a mistake: most event
+      streams (e.g. independent audit log entries, notification fan-out) have
+      no ordering requirement at all, and FIFO's throughput ceiling and added
+      complexity (message group IDs, deduplication IDs) are pure overhead
+      there. The right default is standard queues with idempotent consumers,
+      reserving FIFO for the specific cases — like this one — where ordering
+      or exactly-once-per-key is a real business requirement, not a
+      precaution.
+    rubric:
+      - criterion: "Endorses FIFO for this specific case and explains using MessageGroupId = account ID for per-account ordering"
+        points: 2
+      - criterion: "Explains that FIFO ordering/exactly-once applies per message group, not globally, allowing cross-account parallelism"
+        points: 1
+      - criterion: "Pushes back on 'FIFO for everything' — standard queues + idempotent consumers should be the default elsewhere"
+        points: 2

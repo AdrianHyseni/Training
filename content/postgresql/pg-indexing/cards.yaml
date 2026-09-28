@@ -1,0 +1,31 @@
+cards:
+  - id: c1
+    front: "What does a B-tree index handle well?"
+    back: "Equality and range predicates (=, <, >, BETWEEN) on sortable data."
+  - id: c2
+    front: "What does GIN stand for and what is it good at?"
+    back: "Generalized Inverted Index — indexes composite values like JSONB keys/values, arrays, and full-text tsvectors."
+  - id: c3
+    front: "When is a BRIN index a good fit?"
+    back: "Very large tables where the indexed column correlates with physical row order, like an append-only timestamp column."
+  - id: c4
+    front: "What is a partial index?"
+    back: "An index built with a WHERE clause, covering only a subset of rows — smaller and often fully cacheable."
+  - id: c5
+    front: "What command shows the actual (not just estimated) execution plan?"
+    back: "EXPLAIN ANALYZE (add BUFFERS to also see cache/disk reads)."
+  - id: c6
+    front: "What usually causes the planner's row estimate to diverge sharply from the actual count?"
+    back: "Stale table statistics — run ANALYZE, or check that autovacuum is keeping up."
+  - id: c7
+    front: "What is the main cost of adding an index?"
+    back: "Slower writes (INSERT/UPDATE/DELETE) and extra disk space, because the index must be maintained alongside the table."
+  - id: c8
+    front: "What is an expression index?"
+    back: "An index built on the result of a function or expression (e.g. lower(email)), so queries filtering on that expression can use it."
+  - id: c9
+    front: "Why might the planner ignore an existing index?"
+    back: "If it estimates the predicate isn't selective enough — a sequential scan can be cheaper than random-access index lookups for a large fraction of rows."
+  - id: c10
+    front: "What extension gives you visibility into which queries consume the most total time?"
+    back: "pg_stat_statements — it aggregates execution statistics per normalized query."

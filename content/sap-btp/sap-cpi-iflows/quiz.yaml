@@ -1,0 +1,112 @@
+passThreshold: 0.75
+questions:
+  - id: q1
+    type: single
+    prompt: "What is an iFlow, in terms of the SAP Cloud Integration runtime?"
+    options:
+      - "A visually designed integration flow that SAP Cloud Integration compiles into an Apache Camel route on a managed runtime"
+      - "A raw Java servlet that must be deployed manually to a Tomcat instance"
+      - "A database stored procedure that runs inside the S/4HANA HANA database"
+      - "A static configuration file with no runtime execution model"
+    correct: 0
+    explanation: "SAP Cloud Integration is a managed runtime: you design the iFlow visually and it is compiled and executed as an Apache Camel route, without you managing the underlying servers."
+    domain: cpi-fundamentals
+  - id: q2
+    type: single
+    prompt: "A partner system only exposes a WSDL-based web service for placing orders. Which adapter fits best on the receiver side?"
+    options: [SFTP, SOAP, IDoc, JMS]
+    correct: 1
+    explanation: "SOAP adapters are built specifically for WSDL-based web services, letting you import the WSDL or point at a SOAP endpoint directly, which matches what the partner exposes."
+    domain: adapters
+  - id: q3
+    type: multi
+    prompt: "Which statements about the IDoc adapter are true?"
+    options:
+      - "It is commonly used for SAP-to-SAP or SAP-to-middleware document exchange like sales orders and deliveries"
+      - "It always connects directly over the public internet with no additional connectivity component"
+      - "Connecting to an on-premise SAP system typically requires an on-premise connectivity path such as SAP Cloud Connector"
+      - "It talks RFC underneath the IDoc structure"
+    correct: [0, 2, 3]
+    explanation: "IDoc is the classic document-exchange format for SAP transactional/master data, it uses RFC underneath, and reaching an on-premise SAP system normally requires a secure on-premise connectivity path rather than a direct public connection."
+    domain: adapters
+  - id: q4
+    type: order
+    prompt: "Order these steps as a message flows through a typical iFlow that fans out a collection and recombines it."
+    items:
+      - "Content Modifier captures correlation data into a property"
+      - "Router decides which branch the message takes"
+      - "Splitter breaks the message into per-item messages"
+      - "Gather recombines the per-item results"
+    correctOrder: [0, 1, 2, 3]
+    explanation: "You typically capture correlation data before branching logic runs, decide the branch with a Router, fan out with a Splitter, and only then recombine the individually processed messages with Gather."
+    domain: flow-steps
+  - id: q5
+    type: match
+    prompt: "Match each core iFlow step to what it does."
+    left: ["Content Modifier", "Router", "Splitter", "Looping Process Call"]
+    right:
+      - "Invokes a reusable sub-process, optionally once per item in a list"
+      - "Sets or reads message headers, properties, and the body"
+      - "Evaluates a condition and sends the message down exactly one branch"
+      - "Breaks one message into several independent messages"
+    correctPairs: [[0, 1], [1, 2], [2, 3], [3, 0]]
+    explanation: "Content Modifier manipulates headers/properties/body, Router picks one branch based on a condition, Splitter fans a message out into many, and a Looping Process Call runs a reusable sub-process per item."
+    domain: flow-steps
+  - id: q6
+    type: single
+    prompt: "When should you prefer Message Mapping over a Groovy script for a transformation?"
+    options:
+      - "Whenever the transformation is expressible as field-to-field mapping, since it's more readable and easier to maintain"
+      - "Never — Groovy should always be used because it is more powerful"
+      - "Only when the source and target formats are both IDoc"
+      - "Only when no adapter is configured on the receiver side"
+    correct: 0
+    explanation: "Message Mapping is declarative and readable by someone who didn't write it, so it should be the default whenever the logic is just structural field-to-field transformation; Groovy is reserved for logic that mapping genuinely can't express."
+    domain: transformation
+  - id: q7
+    type: predict
+    prompt: "An iFlow's main process fails partway through because a downstream OData receiver call times out, and the flow has an exception subprocess attached. What happens next?"
+    code: |
+      Main process: Content Modifier -> Router -> Message Mapping -> OData receiver (times out)
+      Exception Subprocess: Log error -> JMS queue (retry)
+    language: text
+    options:
+      - "The message is discarded immediately with no further action"
+      - "Control transfers to the exception subprocess, which logs the error and routes the message to a JMS retry queue"
+      - "The main process automatically restarts itself from the first step with no logging"
+      - "The iFlow is undeployed automatically after any failure"
+    correct: 1
+    explanation: "An attached exception subprocess catches unhandled exceptions from the main process; routing the failed message to a JMS queue is the standard pattern for retrying transient failures like a timeout, without losing the message."
+    domain: resilience
+  - id: q8
+    type: multi
+    prompt: "Which of these are reasons to use a JMS queue in an exception-handling retry pattern?"
+    options:
+      - "It lets a failed message survive a runtime restart and be retried later"
+      - "It guarantees the downstream system can never fail again"
+      - "It decouples a transient failure right now from a permanent failure, allowing bounded retry attempts"
+      - "Messages that exhaust retries can be routed to a dead-letter queue for alerting instead of being lost silently"
+    correct: [0, 2, 3]
+    explanation: "JMS-based retry provides durability across restarts and bounded, decoupled retry attempts, and a dead-letter queue with alerting prevents silent message loss — but it cannot guarantee a downstream system will never fail again."
+    domain: resilience
+  - id: q9
+    type: short
+    prompt: "Name two things you can inspect in the Monitor perspective of Integration Suite when troubleshooting a failed message."
+    rubric:
+      - criterion: "Mentions message processing status (completed/failed/escalated/retry) for a deployed iFlow"
+        points: 1
+      - criterion: "Mentions an individual message's processing log, payload trace, or JMS queue depth/age"
+        points: 1
+    explanation: "The Monitor perspective shows overall message processing status per iFlow, and lets you drill into a specific message's log and trace, as well as JMS queue depth and age for messages awaiting retry."
+    domain: monitoring
+  - id: q10
+    type: single
+    prompt: "Why does CLAUDE.md's accuracy guidance treat specific adapter field names and JMS retry header names (like exact configuration steps) as things to verify rather than teach as fixed facts?"
+    options:
+      - "Because adapter configuration details and platform-specific header names change across SAP releases and should be checked against current SAP Help Portal documentation"
+      - "Because SAP Cloud Integration has no official documentation"
+      - "Because adapters are deprecated in favor of manual coding"
+      - "Because exam codes never change and don't need verification"
+    correct: 0
+    explanation: "Vendor-specific implementation details like exact adapter fields, header names, and configuration steps are volatile and change between platform releases, so the durable concept (retry via a durable queue) is taught while the specifics are flagged for verification against current docs."
+    domain: cpi-fundamentals

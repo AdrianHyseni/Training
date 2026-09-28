@@ -1,0 +1,31 @@
+cards:
+  - id: c1
+    front: "What's the core difference between point-to-point and fan-out messaging?"
+    back: "Point-to-point: exactly one consumer processes each message (a queue). Fan-out: every subscriber gets its own copy of the message (pub/sub)."
+  - id: c2
+    front: "What tradeoff do SQS FIFO queues make compared to standard queues?"
+    back: "FIFO guarantees ordering and exactly-once processing per message group, but at lower throughput than standard queues, which are at-least-once and best-effort ordered."
+  - id: c3
+    front: "What is SQS visibility timeout?"
+    back: "The period after a consumer receives a message during which it's hidden from other consumers. If the consumer doesn't delete it in time, the message becomes visible again for redelivery."
+  - id: c4
+    front: "What does a dead-letter queue (DLQ) with a redrive policy do?"
+    back: "After a message fails processing maxReceiveCount times, SQS moves it out of the source queue into the DLQ, so it stops blocking healthy processing. Once fixed, it can be redriven back into the source queue."
+  - id: c5
+    front: "What is the classic AWS fan-out reliability pattern?"
+    back: "SNS topic fanning out to multiple SQS queues — one queue per consumer — so each consumer gets durable, independently-retryable buffering."
+  - id: c6
+    front: "How does EventBridge differ from SNS?"
+    back: "SNS broadcasts to all subscribers with limited filtering. EventBridge routes events via rules that match on event content/structure, and adds a schema registry, archive/replay, and direct SaaS event ingestion."
+  - id: c7
+    front: "What is the Azure equivalent of an SQS queue?"
+    back: "An Azure Service Bus queue — point-to-point delivery with a lock-duration mechanism (like visibility timeout) and a dead-letter sub-queue."
+  - id: c8
+    front: "What is the Azure equivalent of SNS fan-out to SQS?"
+    back: "An Azure Service Bus topic with multiple subscriptions — each subscription behaves like its own durable queue and can apply its own filter rule."
+  - id: c9
+    front: "How does Azure Event Grid differ from a Service Bus queue?"
+    back: "Event Grid is push-based and doesn't durably hold undelivered events the way a queue does; it relies on its own retry policy, and is often wired to deliver into a Service Bus queue to get durable buffering."
+  - id: c10
+    front: "Why should SQS/Service Bus consumers be built idempotent even on 'reliable' queues?"
+    back: "Standard SQS queues (and most queues generally) are at-least-once — duplicate delivery is expected, not a bug — so consumers must safely handle processing the same message more than once."

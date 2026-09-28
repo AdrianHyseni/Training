@@ -1,0 +1,14 @@
+id: de-pipelines-streaming
+line: data-engineering
+title: Data Pipelines and Streaming Fundamentals
+level: practitioner
+estimatedMinutes: 75
+prerequisites: []
+related: []
+certifications: []
+lastReviewed: "2026-09-28"
+verify:
+  - claim: "Apache Kafka's exactly-once semantics (idempotent producers + transactions) were introduced in Kafka 0.11 and remain the mechanism for end-to-end exactly-once processing."
+    sourceUrl: "https://www.confluent.io/blog/exactly-once-semantics-are-possible-heres-how-apache-kafka-does-it/"
+  - claim: "Current Kafka delivery-guarantee configuration options and defaults (acks, isolation.level, enable.auto.commit)."
+    sourceUrl: "https://docs.confluent.io/kafka/design/delivery-semantics.html"

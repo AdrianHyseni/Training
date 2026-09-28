@@ -1,0 +1,71 @@
+exercises:
+  - id: ex1
+    prompt: >-
+      A retailer has one order-management backend and three consumers that all
+      need order data today: a web storefront, a mobile app, and a new partner
+      integration for a dropshipping vendor. The partner integration was just
+      built as a direct connection to the order-management backend, because
+      "it was faster to ship." Design an API-led structure for this scenario
+      and explain what you'd change about the partner integration, and why.
+    modelAnswer: |
+      Introduce one system API wrapping the order-management backend, normalizing
+      its data model and hiding backend-specific quirks. On top of it, a process
+      API that shapes order data for general consumption — applying any business
+      rules (e.g. filtering out internal-only fields, computing derived statuses).
+      Each of the three consumers gets its own experience API on top of that
+      process API: the web and mobile experience APIs shape the payload for their
+      UI needs, and the partner experience API additionally enforces field-level
+      redaction (no internal cost data, no customer PII beyond what's needed for
+      shipping) appropriate for an external party, plus whatever auth scheme is
+      used for partner access.
+
+      The direct partner connection should be retired and replaced with the
+      partner experience API. Reasoning: today it's a shortcut, but it means any
+      change to the order-management backend's schema risks breaking the partner
+      integration directly, with no normalization layer catching it, and it gives
+      the partner more surface area than they should have (no shaping/redaction).
+      Migrating it also means future partners reuse the same system and process
+      APIs instead of each getting another bespoke direct connection.
+    rubric:
+      - criterion: "Proposes one system API for the backend and one process API for shared shaping/business rules"
+        points: 2
+      - criterion: "Proposes a separate experience API per consumer, including the partner, rather than reusing one API across channels"
+        points: 1
+      - criterion: "Explains the risk of the current direct partner connection (schema coupling, missing redaction/shaping)"
+        points: 1
+      - criterion: "Notes the reuse benefit for future consumers/partners"
+        points: 1
+  - id: ex2
+    prompt: >-
+      Your team is debating error handling for a process API that calls two
+      system APIs: one that fetches a customer's core profile (required — the
+      response is meaningless without it) and one that fetches the customer's
+      loyalty-points balance (optional enrichment — nice to have, not critical).
+      Write a short design note describing the error-handling strategy for each
+      call and why they should differ.
+    modelAnswer: |
+      The core profile call should use On Error Propagate: if it fails, the
+      process API's response would be meaningless without it, so the failure
+      should bubble up to the caller (and ultimately surface as an error response
+      via the global error handler) rather than returning a broken or empty
+      payload silently.
+
+      The loyalty-points call should use On Error Continue with a documented
+      fallback (e.g. omit the field, or return a null/zero with a flag indicating
+      it's unavailable), because the response is still useful without it. This
+      avoids failing an entire customer-profile request just because a
+      non-critical enrichment service is briefly degraded.
+
+      Both failure paths should still be logged distinctly so operations can tell
+      the difference between "the loyalty service is degraded" (worth monitoring,
+      not urgent) and "the core profile system is down" (page someone). The
+      distinction matters because treating every dependency as equally critical
+      either causes unnecessary full outages (if everything propagates) or hides
+      real failures (if everything is silently swallowed).
+    rubric:
+      - criterion: "Assigns On Error Propagate to the required core-profile call and explains why"
+        points: 2
+      - criterion: "Assigns On Error Continue with a fallback to the optional loyalty call and explains why"
+        points: 2
+      - criterion: "Notes the value of distinguishing severity in logging/monitoring, not just in flow control"
+        points: 1

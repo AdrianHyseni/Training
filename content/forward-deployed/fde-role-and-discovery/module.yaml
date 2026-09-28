@@ -1,0 +1,14 @@
+id: fde-role-and-discovery
+line: forward-deployed
+title: "Forward Deployed Engineering: Role and Problem Discovery"
+level: foundation
+estimatedMinutes: 50
+prerequisites: []
+related: []
+certifications: []
+lastReviewed: "2026-09-28"
+verify:
+  - claim: "Palantir coined the 'forward deployed engineer' title in the early 2010s and used it as the primary post-sale engineering role for intelligence-community and commercial customers."
+    sourceUrl: "https://blog.palantir.com/a-day-in-the-life-of-a-palantir-forward-deployed-software-engineer-45ef2de257b1"
+  - claim: "Anthropic hires Forward Deployed Engineers on its Applied AI team to embed with strategic customers and ship production applications built on Claude."
+    sourceUrl: "https://job-boards.greenhouse.io/anthropic/jobs/5302966008"

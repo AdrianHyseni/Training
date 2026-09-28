@@ -1,0 +1,111 @@
+passThreshold: 0.75
+questions:
+  - id: q1
+    type: single
+    prompt: "A monthly finance close needs correctness and auditability far more than sub-second freshness. Which architecture is the better fit?"
+    options: [Streaming, Batch, Neither — this requires a message broker, Both, with no batch layer]
+    correct: 1
+    explanation: "Batch processing over a well-defined window (the month) is simpler to audit and rerun deterministically than a continuous streaming system, and the use case doesn't need low latency, so the extra operational cost of streaming buys nothing here."
+    domain: batch-vs-streaming
+  - id: q2
+    type: multi
+    prompt: "Which of these are genuine costs of choosing a streaming architecture over batch?"
+    options:
+      - "It requires operating a standing system (broker, processors, monitoring) rather than a job that runs and exits"
+      - "It always produces less accurate results than batch"
+      - "On-call needs to watch for consumer lag as an operational signal"
+      - "It adds infrastructure (schema registry, stream processors) that a simple batch job doesn't need"
+    correct: [0, 2, 3]
+    explanation: "Streaming trades operational simplicity for latency: you gain freshness but take on a continuously-running system with its own failure modes and monitoring needs. It is not inherently less accurate — accuracy depends on the processing logic, not the latency model."
+    domain: batch-vs-streaming
+  - id: q3
+    type: single
+    prompt: "Why is an UPSERT generally safer to retry than a blind UPDATE that decrements a counter?"
+    options:
+      - "UPSERTs run faster on every database"
+      - "UPSERTs are idempotent — applying the same UPSERT twice leaves the result the same as applying it once, while decrementing a counter twice changes the result"
+      - "UPDATE statements are not supported in streaming systems"
+      - "UPSERTs do not require a primary key"
+    correct: 1
+    explanation: "Idempotency is about the effect of repeated application, not speed. Setting a row to a specific value by key is idempotent; incrementing or decrementing a value is not, because a retry changes the outcome."
+    domain: idempotency-semantics
+  - id: q4
+    type: multi
+    prompt: "Which statements about Kafka's delivery semantics are accurate?"
+    options:
+      - "At-least-once delivery means a message is never lost but may be processed more than once"
+      - "Exactly-once semantics in Kafka only holds within the transactional boundary Kafka controls — an external side effect outside that boundary can still happen more than once"
+      - "At-most-once delivery is the safest default for financial transactions"
+      - "Idempotent downstream processing combined with at-least-once delivery can achieve effectively-once results without full transactional overhead"
+    correct: [0, 1, 3]
+    explanation: "At-least-once plus idempotent writes is a common, cheaper path to correct results. Exactly-once guarantees stop at the transaction boundary — a call to an external API isn't covered. At-most-once risks silently losing messages, which is the opposite of what financial systems need."
+    domain: idempotency-semantics
+  - id: q5
+    type: order
+    prompt: "Order the steps of a stream processing pipeline from source event to a warehouse table being queryable."
+    items:
+      - "Source system emits a change event"
+      - "Producer publishes the event to a Kafka topic, validated against the schema registry"
+      - "A stream processor consumes the event, enriches or aggregates it, and publishes to an output topic"
+      - "A sink connector writes the output topic's records into the warehouse table"
+    correctOrder: [0, 1, 2, 3]
+    explanation: "Each stage depends on the one before it: there's nothing to publish before the source emits an event, nothing to process before it's on a topic, and nothing to load before the processor has produced an output record."
+    domain: kafka-fundamentals
+  - id: q6
+    type: match
+    prompt: "Match each Kafka concept to what it is responsible for."
+    left: [Partition, Offset, Consumer group, Schema registry]
+    right:
+      - "A consumer's tracked position within a partition's log"
+      - "Enforces compatibility rules on schema changes before they reach consumers"
+      - "An ordered, append-only slice of a topic used for parallelism"
+      - "A set of consumers sharing the work of reading a topic, one partition per consumer at a time"
+    correctPairs: [[0, 2], [1, 0], [2, 3], [3, 1]]
+    explanation: "A partition is Kafka's unit of ordering and parallelism; an offset is a consumer's bookmark within one; a consumer group divides partitions among cooperating consumers; and a schema registry gatekeeps compatibility at write time so bad schema changes don't reach consumers."
+    domain: kafka-fundamentals
+  - id: q7
+    type: predict
+    prompt: "A producer publishes events keyed by customer_id to a 6-partition topic. What does this predict about ordering?"
+    code: |
+      producer.send("orders.created", key=customer_id, value=order_event)
+    language: python
+    options:
+      - "All events across all customers will be processed in global arrival order"
+      - "Events for the same customer_id will land on the same partition and stay ordered relative to each other, but ordering across different customers is not guaranteed"
+      - "Ordering is undefined for any keyed message"
+      - "Each event goes to a different partition regardless of key"
+    correct: 1
+    explanation: "Kafka guarantees order only within a partition. Keying by customer_id routes all of one customer's events to the same partition (via a consistent hash), preserving per-customer order, but there is no ordering guarantee across the whole topic since different keys can land on different partitions."
+    domain: kafka-fundamentals
+  - id: q8
+    type: single
+    prompt: "A consumer group's lag (the gap between the latest offset and the offset it has processed) starts climbing steadily. What does this most directly indicate?"
+    options:
+      - "The topic has been deleted"
+      - "The consumer is falling behind production, meaning downstream freshness is degrading"
+      - "The schema registry has rejected a message"
+      - "The producer has stopped sending data"
+    correct: 1
+    explanation: "Growing consumer lag means events are arriving faster than the consumer processes them (or the consumer has slowed/stalled), which is exactly the freshness signal streaming pipelines monitor — it's the direct streaming analog of a batch job's staleness."
+    domain: data-quality
+  - id: q9
+    type: short
+    prompt: "A completeness check on a daily batch pipeline is supposed to catch missing source data before it reaches a report. Describe one concrete check you'd implement, and why it would catch a real failure mode."
+    rubric:
+      - criterion: "Proposes a concrete, implementable check (e.g. row-count comparison against expected volume/historical baseline, or checking that all expected source partitions/regions reported in)"
+        points: 1
+      - criterion: "Explains why it catches a real failure (e.g. a source system silently failing to deliver a subset of data would otherwise pass a schema-only check)"
+        points: 1
+    explanation: "A common effective check is comparing today's row count (or per-source-system row count) against a historical baseline or expected count — a silent partial-source failure (e.g. 9 of 12 regions reported) passes schema validation but fails a completeness check, which schema validation alone can't catch."
+    domain: data-quality
+  - id: q10
+    type: single
+    prompt: "Why is 'full compatibility' (both backward and forward) usually the right default for a schema shared by many independent consumers, rather than a vendor-specific detail to verify per project?"
+    options:
+      - "It is a durable design principle about coordinating independent producers/consumers that don't share a deploy schedule, true regardless of which broker or registry product is used"
+      - "It is only relevant to Kafka 0.11 and later versions"
+      - "It only matters for JSON schemas, not Avro or Protobuf"
+      - "It guarantees exactly-once delivery"
+    correct: 0
+    explanation: "The need for both-directions compatibility comes from the fact that producers and consumers deploy independently and can't be forced to upgrade in lockstep — that's a structural property of decoupled systems, not a fact tied to one vendor's product version, which is why it's taught as a durable concept."
+    domain: schema-evolution

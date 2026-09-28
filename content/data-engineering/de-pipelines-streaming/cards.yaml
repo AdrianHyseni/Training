@@ -1,0 +1,31 @@
+cards:
+  - id: c1
+    front: "When should you reach for streaming instead of batch?"
+    back: "When latency requirements or event volume genuinely demand near-real-time processing — not by default, since streaming means operating a standing system rather than a job that runs and exits."
+  - id: c2
+    front: "What are the three core stages of a data pipeline?"
+    back: "Extract (read from the source), transform (reshape/validate/enrich), and load/publish (write to where consumers use it)."
+  - id: c3
+    front: "What does idempotency mean for a pipeline operation?"
+    back: "Applying the same operation twice produces the same result as applying it once — e.g. an UPSERT by key, versus a counter decrement which is not idempotent."
+  - id: c4
+    front: "What is the difference between at-least-once and exactly-once delivery?"
+    back: "At-least-once guarantees no message is lost but allows duplicates; exactly-once guarantees each message's effect is applied only once, but only within the transactional boundary the system controls."
+  - id: c5
+    front: "What does a schema registry do?"
+    back: "Stores schema versions centrally and enforces compatibility rules at write time, rejecting producer writes that would break existing consumers before they ever reach a topic."
+  - id: c6
+    front: "What is a Kafka partition, and what ordering guarantee does it provide?"
+    back: "An ordered, append-only slice of a topic used for parallelism. Kafka guarantees order within a partition, not across the whole topic."
+  - id: c7
+    front: "What is a Kafka consumer group?"
+    back: "A set of consumers that cooperate to read a topic, with each partition assigned to exactly one consumer in the group at a time — this is how Kafka scales consumption horizontally."
+  - id: c8
+    front: "What does 'consumer lag' measure, and why does it matter?"
+    back: "The gap between the latest offset on a partition and the offset a consumer group has processed. Growing lag is the streaming analog of staleness — it means downstream freshness is degrading."
+  - id: c9
+    front: "Name the three data quality checks most pipelines need."
+    back: "Freshness (is the data current?), completeness (did all expected data arrive?), and schema validation (does it match the expected shape/types?)."
+  - id: c10
+    front: "Why does a fraud-detection pipeline moving from nightly batch to streaming change what it can catch?"
+    back: "Batch flags fraud after the fact (money often already moved); streaming can score and hold a payment before it settles, at the cost of running a continuous system that needs its own latency and lag monitoring."

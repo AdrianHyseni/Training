@@ -1,0 +1,86 @@
+exercises:
+  - id: ex1
+    prompt: >-
+      A logistics company's VP of Operations tells you: "Our dispatchers spend
+      too much time on the phone rerouting trucks when something goes wrong —
+      we want an AI agent that handles rerouting automatically." You have two
+      weeks before you need to show a working pilot. Walk through how you'd
+      run discovery and scope a 2-week pilot: what you'd do in the first few
+      days, what you'd want to measure, and how you'd keep the pilot narrow
+      enough to actually finish in two weeks while still being a real slice
+      of the workflow.
+    modelAnswer: |
+      First few days: don't start building. Shadow two or three dispatchers
+      for at least a day each, and pull a sample of recent "something went
+      wrong" incidents (vehicle breakdown, traffic closure, missed delivery
+      window) from logs or tickets. The goal is to find out what "rerouting"
+      actually involves in practice — is it usually a small number of well-
+      understood scenarios, or wildly varied? Also ask what data the
+      dispatcher actually looks at (traffic feeds, driver location, delivery
+      windows, customer priority) and where the current process is slowest:
+      often it's not the decision itself but gathering the information needed
+      to make it.
+
+      Likely finding: full autonomous rerouting is too broad and too risky
+      for two weeks — dispatchers are making judgment calls with liability
+      and customer-relationship implications the AI shouldn't own yet. Reframe
+      the ask: instead of an agent that reroutes automatically, build a
+      narrower tool that, for the single most common incident type (say,
+      traffic-related delays on the highest-volume route), pulls the relevant
+      live data and proposes 2-3 reroute options with an estimated delay for
+      each, which the dispatcher approves with one click instead of doing the
+      lookup and calculation by hand.
+
+      Measurable target: cut the average time a dispatcher spends handling that
+      specific incident type from (baseline, e.g.) 12 minutes to under 4
+      minutes, on real incidents, without an increase in customer complaints
+      about that route.
+
+      Scope for two weeks: cover exactly one incident type and one route
+      class, wire it to real (or a live feed of) traffic and location data
+      rather than mocked data, keep the dispatcher fully in the loop as the
+      approver (no autonomous action), and run it in shadow/assist mode
+      alongside the existing process so it's low-risk if the proposals are
+      wrong. Explicitly leave out: other incident types, other routes, any
+      autonomous execution — and say so to the VP as follow-on scope for a
+      later pilot, not something the two-week pilot has to cover.
+    rubric:
+      - criterion: "Starts with discovery (shadowing/data review) rather than building immediately, and questions whether the literal ask ('fully automatic rerouting') is the right scope"
+        points: 2
+      - criterion: "Narrows the pilot to one concrete, bounded slice (one incident type / one route class) rather than the full general problem"
+        points: 2
+      - criterion: "Defines a specific measurable target with a baseline and number, not just 'faster'"
+        points: 1
+      - criterion: "Keeps the dispatcher in the loop / keeps the pilot low-risk (shadow mode, human approval) given the two-week timeline"
+        points: 1
+  - id: ex2
+    prompt: >-
+      A teammate new to forward deployed engineering says: "Discovery feels
+      like a waste of time — the customer already told us what they want,
+      let's just start building so we have something to show them fast."
+      Write a short response explaining why you'd still do discovery first,
+      without contradicting the value of building and shipping quickly.
+    modelAnswer: |
+      Building fast and doing discovery aren't in tension — the point of
+      discovery isn't to slow things down with weeks of requirements
+      documents, it's to make sure the fast building effort goes toward the
+      right target. Customers, especially executive sponsors, often describe
+      a solution ("we want a chatbot," "we want an autonomous agent") without
+      having validated that it addresses the actual bottleneck, because they
+      aren't the ones doing the day-to-day work. A day or two spent watching
+      the actual users and looking at real cases is usually far cheaper than
+      building for a week toward the wrong target and having to start over —
+      which is the realistic alternative if we skip straight to building.
+
+      Discovery here can be lightweight and fast itself: a day of shadowing,
+      a look at a sample of real cases, and a short conversation to define
+      what "success" would actually look like as a number. That's consistent
+      with a bias toward shipping fast — it just means we ship the right thin
+      slice first, instead of a fast but wrong one.
+    rubric:
+      - criterion: "Argues discovery and speed aren't opposed — reframes discovery as fast/lightweight, not a slow phase"
+        points: 2
+      - criterion: "Explains the risk of building against an unvalidated request (executive ask vs. actual bottleneck)"
+        points: 2
+      - criterion: "Notes discovery should still end with a measurable success definition, not just observation for its own sake"
+        points: 1

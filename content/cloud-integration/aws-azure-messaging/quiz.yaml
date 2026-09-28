@@ -1,0 +1,110 @@
+passThreshold: 0.75
+questions:
+  - id: q1
+    type: single
+    prompt: "A service needs to process a backlog of independent jobs, where each job should be handled by exactly one worker. Which pattern fits?"
+    options: ["Fan-out / pub-sub", "Point-to-point queuing", "Broadcast to all consumers", "Synchronous direct call to every consumer"]
+    correct: 1
+    explanation: "Point-to-point queuing (like SQS or a Service Bus queue) is designed so competing workers pull from the same queue and each message is processed exactly once, by one worker — ideal for distributing independent jobs."
+    domain: messaging-patterns
+  - id: q2
+    type: single
+    prompt: "Why do standard SQS queues offer higher throughput than FIFO queues?"
+    options: [
+      "Standard queues use a different network protocol",
+      "Standard queues don't guarantee strict ordering or exactly-once delivery, so SQS doesn't need to serialize delivery the way FIFO queues do",
+      "Standard queues store messages in memory only",
+      "FIFO queues are limited to a single AWS region"
+    ]
+    correct: 1
+    explanation: "FIFO queues guarantee ordering and exactly-once processing per message group, which requires more coordination and effectively serializes delivery within a group. Standard queues drop those guarantees (at-least-once, best-effort order) in exchange for much higher throughput."
+    domain: sqs
+  - id: q3
+    type: multi
+    prompt: "Which statements about SQS visibility timeout are correct?"
+    options: [
+      "While a message is invisible, other consumers cannot receive it",
+      "The visibility timeout permanently deletes the message from the queue",
+      "If a consumer fails to delete a message before the timeout expires, another consumer can receive it again",
+      "The visibility timeout should generally be set longer than the typical processing time"
+    ]
+    correct: [0, 2, 3]
+    explanation: "Visibility timeout hides a received message from other consumers without deleting it; only the consumer explicitly deleting the message removes it permanently. If processing takes longer than the timeout, the message reappears and can be picked up again — so the timeout should comfortably exceed typical processing time."
+    domain: sqs
+  - id: q4
+    type: order
+    prompt: "Order the lifecycle of a message that repeatedly fails processing and is protected by a dead-letter queue."
+    items:
+      - "Consumer receives the message; visibility timeout starts"
+      - "Consumer fails to process and delete the message before the timeout expires"
+      - "Message becomes visible again and is redelivered, incrementing the receive count"
+      - "Receive count exceeds maxReceiveCount, so the queue moves the message to the DLQ"
+      - "An operator investigates the DLQ, fixes the root cause, and redrives the message"
+    correctOrder: [0, 1, 2, 3, 4]
+    explanation: "This is the standard DLQ lifecycle: repeated failed processing increments the receive count until it exceeds the configured threshold, at which point the message is moved out of the healthy flow so it can be diagnosed and replayed once fixed."
+    domain: dead-letter-queues
+  - id: q5
+    type: match
+    prompt: "Match each AWS service to the Azure service that plays the closest equivalent role."
+    left: ["SQS queue", "SNS topic fanning out to SQS queues", "EventBridge"]
+    right: ["Event Grid", "Service Bus queue", "Service Bus topic with subscriptions"]
+    correctPairs: [[0, 1], [1, 2], [2, 0]]
+    explanation: "An SQS queue maps to a Service Bus queue (point-to-point); SNS fan-out to SQS maps to a Service Bus topic with per-consumer subscriptions (pub/sub with durable buffering per subscriber); EventBridge's content-based routing and schema registry map most closely to Event Grid's filterable event subscriptions."
+    domain: azure-equivalents
+  - id: q6
+    type: predict
+    prompt: "A team wires an SNS topic directly to three subscriber Lambda functions with no SQS queues in between. One Lambda has a bug and throws on every invocation. What's the most likely consequence, compared to subscribing via SQS queues?"
+    code: |
+      Topic: OrderPlaced (SNS)
+      Subscribers: BillingLambda, InventoryLambda (buggy), AnalyticsLambda
+    language: text
+    options: [
+      "SNS will retry the failing Lambda per its retry policy, but there's no durable queue holding those events for later inspection or replay the way an SQS DLQ would provide",
+      "The bug in InventoryLambda will silently corrupt messages delivered to BillingLambda and AnalyticsLambda",
+      "SNS will pause the entire topic until the bug is fixed",
+      "Nothing changes — SNS behaves identically whether the subscriber is a queue or a direct compute target"
+    ]
+    correct: 0
+    explanation: "SNS delivers independently to each subscriber, so the other Lambdas are unaffected — but without an SQS queue (and its DLQ) sitting between the topic and the failing Lambda, there's no durable buffer capturing the failed events for inspection and redrive; you're relying on SNS's own retry/DLQ configuration instead of the richer queue-based pattern."
+    domain: fan-out
+  - id: q7
+    type: single
+    prompt: "A platform team wants only the subset of a domain event stream matching specific field values (e.g. events from a particular region) to reach a given consumer, without that consumer having to filter out irrelevant events itself. Which capability addresses this most directly?"
+    options: ["SNS topic subscription with no filter", "SQS standard queue", "EventBridge (or Event Grid) rules that match on event content", "Increasing SQS visibility timeout"]
+    correct: 2
+    explanation: "EventBridge rules (and Event Grid event subscriptions) can match on the actual field values inside an event and route only matching events to a target, which is exactly the content-based routing SNS's broadcast-to-all-subscribers model and plain SQS don't provide on their own."
+    domain: eventbridge
+  - id: q8
+    type: multi
+    prompt: "Which of these are true about Azure Event Grid, in contrast to a Service Bus queue?"
+    options: [
+      "Event Grid is push-based and does not durably hold undelivered events the way a queue does",
+      "Event Grid can route events to targets including Service Bus queues for durable buffering",
+      "Event Grid guarantees strict FIFO ordering of all events by default",
+      "Event Grid supports filterable event subscriptions"
+    ]
+    correct: [0, 1, 3]
+    explanation: "Event Grid pushes events to subscribers and relies on its own retry policy rather than holding messages indefinitely like a queue; a common pattern is having Event Grid deliver into a Service Bus queue to regain durable buffering. It does not guarantee strict ordering, but it does support filtering on event subscriptions."
+    domain: azure-equivalents
+  - id: q9
+    type: short
+    prompt: "A consumer team complains that their SQS queue occasionally delivers the same message twice, and processing it twice causes a duplicate charge in their billing system. Name the queue-level fix and the consumer-level fix, and explain why both matter."
+    rubric:
+      - criterion: "Identifies that switching to a FIFO queue is one option, but notes its throughput/complexity tradeoff, OR correctly states that standard queues are at-least-once by design"
+        points: 1
+      - criterion: "Identifies making the consumer idempotent (e.g. dedupe by message/order ID) as the more general fix, and explains this is needed regardless of queue type because standard queues never guarantee exactly-once"
+        points: 1
+    explanation: "Standard SQS queues are at-least-once by design, so duplicate delivery is expected, not a bug — the robust fix is an idempotent consumer (e.g. check an order ID before charging). FIFO queues reduce duplicates within a message group but trade away standard-queue throughput, so it's a tradeoff, not a substitute for idempotency."
+    domain: sqs
+  - id: q10
+    type: single
+    prompt: "Why is 'publish once to a topic, let each consumer own its own durable queue' generally preferred over the producer calling every downstream service directly?"
+    options: [
+      "It's cheaper in every case regardless of message volume",
+      "It isolates the producer from downstream outages/slowness and lets each consumer scale and fail independently",
+      "It removes the need for any retry logic anywhere in the system",
+      "It guarantees every consumer processes the event in the same amount of time"
+    ]
+    correct: 1
+    explanation: "The core benefit of fan-out with per-consumer durable buffering is decoupling: the producer returns quickly and isn't blocked or broken by a slow or failing downstream consumer, and each consumer can scale, retry, and fail independently of the others — a durable, vendor-independent architectural benefit, not a specific product feature."
+    domain: messaging-patterns

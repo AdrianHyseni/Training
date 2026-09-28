@@ -1,0 +1,31 @@
+cards:
+  - id: c1
+    front: "What are the three layers in MuleSoft's API-led connectivity model?"
+    back: "System APIs (wrap backend systems), Process APIs (orchestrate and shape data across systems), and Experience APIs (channel-specific consumer-facing APIs)."
+  - id: c2
+    front: "What does a system API expose, and what does it deliberately hide?"
+    back: "It exposes a normalized, stable interface to one backend system; it hides that backend's internal quirks, protocols, and field names."
+  - id: c3
+    front: "What is the main job of a process API?"
+    back: "Orchestrating and combining one or more system APIs and applying business rules, without knowing which channel will ultimately consume the result."
+  - id: c4
+    front: "What is Anypoint Exchange used for?"
+    back: "A shared catalog for publishing and discovering reusable API specifications, connectors, templates, and fragments across teams."
+  - id: c5
+    front: "What does DataWeave's `reduce` function do?"
+    back: "Walks an array accumulating a running value (with an optional starting accumulator), producing a single combined result — like summing line-item totals."
+  - id: c6
+    front: "What's the difference between On Error Continue and On Error Propagate?"
+    back: "On Error Continue recovers and lets the flow keep running (e.g. with a fallback value); On Error Propagate stops the flow and passes the error upward/outward."
+  - id: c7
+    front: "What is MUnit, and what does it typically mock?"
+    back: "Mule's own testing framework for testing flows in isolation; process-API tests typically mock the system APIs they call rather than hitting real backends."
+  - id: c8
+    front: "Why does Mule use a hierarchy of typed errors (e.g. HTTP:TIMEOUT under a broader connectivity type)?"
+    back: "So handlers can catch a specific failure mode precisely or fall back to a broader handler for related failures, instead of treating every error identically."
+  - id: c9
+    front: "What's the point of a global error handler at the API layer?"
+    back: "It centralizes error-to-HTTP-status mapping so every API in a project returns errors in a consistent, predictable shape that callers can build reliable retry logic against."
+  - id: c10
+    front: "When does the extra cost of three API layers stop being worth it?"
+    back: "When there's only one consumer and no expected reuse — the layering overhead (extra hops, more artifacts, more coordination) isn't justified without reuse across multiple consumers or systems."

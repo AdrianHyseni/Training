@@ -1,0 +1,31 @@
+cards:
+  - id: c1
+    front: "What's the difference between a point-to-point and a publish-subscribe channel?"
+    back: "Point-to-point delivers each message to exactly one of the listening consumers. Publish-subscribe delivers a copy of each message to every subscriber."
+  - id: c2
+    front: "What does a content-based router do?"
+    back: "Inspects a message's content and sends it down one of several channels based on that content, e.g. routing high-value claims to manual review."
+  - id: c3
+    front: "What's the difference between a splitter and an aggregator?"
+    back: "A splitter breaks one message into several independent messages. An aggregator does the reverse: it collects related messages and combines them into one once some condition (all arrived, or a timeout) is met."
+  - id: c4
+    front: "What does it mean for a message consumer to be idempotent?"
+    back: "Processing the same message more than once produces the same result as processing it once — required because most messaging systems only guarantee at-least-once delivery."
+  - id: c5
+    front: "What is an idempotency key and why is it needed?"
+    back: "A unique identifier attached to a logical operation (e.g. an order ID) that a consumer checks against before doing the work, so a redelivered duplicate message is a no-op instead of running the operation twice."
+  - id: c6
+    front: "What problem does the transactional outbox pattern solve?"
+    back: "It prevents a business database change and its corresponding outgoing message from going out of sync — writing both in the same database transaction so they succeed or fail together, instead of as two separate, unsynchronized operations."
+  - id: c7
+    front: "How does a message get from an outbox table to the message broker?"
+    back: "A separate publisher process (a poller, or a change-data-capture reader watching the database log) reads unpublished outbox rows and sends them to the broker, then marks them sent."
+  - id: c8
+    front: "What is a dead-letter queue (DLQ) for?"
+    back: "It holds messages that failed processing after a bounded number of retries, so they stop blocking the main queue and aren't silently lost — a healthy system's DLQ is normally empty and alerts when it isn't."
+  - id: c9
+    front: "Why use exponential backoff with jitter between retries?"
+    back: "It spaces out retry attempts so that when a downstream system recovers from an outage, it isn't immediately hit by every failed message retrying at once (a thundering herd)."
+  - id: c10
+    front: "Why is removing a field from a shared message format risky, even if the producing team no longer uses it?"
+    back: "The message format is a contract the moment any other system consumes it — other consumers may still depend on that field. Removing or renaming it is a breaking change; adding a new optional field is the safe, backward-compatible kind of change."

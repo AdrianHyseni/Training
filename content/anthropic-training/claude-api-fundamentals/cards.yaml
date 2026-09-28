@@ -1,0 +1,31 @@
+cards:
+  - id: c1
+    front: "What three fields does a minimal Messages API request need?"
+    back: "model, max_tokens, and messages — everything else (system, streaming, tools, thinking) is optional on top of these."
+  - id: c2
+    front: "Is the Messages API stateful or stateless across requests?"
+    back: "Stateless. It has no memory of prior calls — the client must resend the full conversation history as the messages array on every request."
+  - id: c3
+    front: "What does max_tokens actually control?"
+    back: "The maximum number of tokens the model may generate for that response — a ceiling the model usually stops well short of, not a target length."
+  - id: c4
+    front: "What is the risk of never checking stop_reason before using a response?"
+    back: "You can silently ship a truncated (max_tokens) or safety-declined (refusal) response as if it were a normal, complete answer."
+  - id: c5
+    front: "What does the system parameter carry, as opposed to the messages array?"
+    back: "Instructions that apply to the whole conversation — persona, constraints, output format — kept separate from the turn-by-turn user/assistant exchange."
+  - id: c6
+    front: "What sequence of events wraps a single streamed content block?"
+    back: "content_block_start, one or more content_block_delta events, then content_block_stop."
+  - id: c7
+    front: "Why does an error still need to be handled mid-stream even though the HTTP status was already 200?"
+    back: "A streaming response's HTTP status succeeds before generation finishes, so a failure partway through arrives as an error event in the SSE stream rather than as an HTTP error status."
+  - id: c8
+    front: "Why use the dedicated token-counting endpoint instead of counting words or characters?"
+    back: "Pricing, context window limits, and rate limits are all denominated in Claude's own tokens, which don't map cleanly to word or character counts."
+  - id: c9
+    front: "What's the difference between a short-term rate limit (429) and a monthly spend cap?"
+    back: "A rate limit is typically retryable after a short wait (often with a retry-after header); a spend cap is a longer-lived organization-level condition that doesn't resolve by waiting seconds."
+  - id: c10
+    front: "Why should the model ID come from configuration (e.g. an env var) instead of being hard-coded?"
+    back: "Anthropic ships new models over time; centralizing the model ID means an upgrade is a one-line config change instead of a hunt through every call site in the codebase."

@@ -1,0 +1,22 @@
+id: dec-aws-azure-stacks
+line: data-engineering-cloud
+title: "Data Engineering on AWS and Azure: Comparing the Stacks"
+level: practitioner
+estimatedMinutes: 75
+prerequisites: []
+related: []
+certifications: []
+lastReviewed: "2026-09-28"
+verify:
+  - claim: "AWS Glue Data Catalog feature set (e.g. IAM-based authorization for S3 Tables/Iceberg, crawler behavior, supported formats) changes frequently — confirm current capabilities before teaching specifics."
+    sourceUrl: "https://docs.aws.amazon.com/glue/latest/dg/what-is-glue.html"
+  - claim: "Amazon Redshift Spectrum and Redshift Serverless pricing, limits, and integration details with the Glue Data Catalog."
+    sourceUrl: "https://docs.aws.amazon.com/redshift/latest/dg/c-using-spectrum.html"
+  - claim: "AWS Lake Formation's fine-grained access control model (row/column/cell-level permissions, supported engines) evolves; verify current scope."
+    sourceUrl: "https://docs.aws.amazon.com/lake-formation/latest/dg/what-is-lake-formation.html"
+  - claim: "Microsoft Fabric is a fast-moving, unified SaaS platform (OneLake, Lakehouse, Warehouse, Data Factory, Real-Time Intelligence); specific workload names, capacity/SKU model, and pricing change often — verify against current docs before citing specifics."
+    sourceUrl: "https://learn.microsoft.com/en-us/fabric/get-started/microsoft-fabric-overview"
+  - claim: "Azure Synapse Analytics vs. Microsoft Fabric positioning (Microsoft's guidance on which to use for new projects) may shift as Fabric matures."
+    sourceUrl: "https://learn.microsoft.com/en-us/fabric/get-started/microsoft-fabric-overview"
+  - claim: "Azure Data Lake Storage Gen2 specific limits (namespace, throughput, redundancy options) and OneLake's relationship to ADLS Gen2."
+    sourceUrl: "https://learn.microsoft.com/en-us/azure/storage/blobs/data-lake-storage-introduction"

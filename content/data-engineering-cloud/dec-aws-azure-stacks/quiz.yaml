@@ -1,0 +1,112 @@
+passThreshold: 0.75
+questions:
+  - id: q1
+    type: single
+    prompt: "In AWS's data lake stack, what role does the Glue Data Catalog play?"
+    options:
+      - "It stores the actual data files"
+      - "It is a shared metadata repository that Athena, Redshift Spectrum, and EMR all read schema from"
+      - "It is a dedicated warehouse compute engine"
+      - "It replaces the need for S3"
+    correct: 1
+    explanation: "The Glue Data Catalog holds table/schema metadata (a Hive-metastore-compatible catalog), not the data itself. Multiple AWS query engines share it so they can all read the same underlying S3 data consistently."
+    domain: aws-stack
+  - id: q2
+    type: single
+    prompt: "What is OneLake's role in Microsoft Fabric?"
+    options:
+      - "A separate storage product unrelated to ADLS Gen2"
+      - "A single logical, tenant-wide lake (built on ADLS Gen2) that Fabric items like Lakehouse and Warehouse reference directly"
+      - "A caching layer used only by Power BI"
+      - "A replacement for Azure Data Factory"
+    correct: 1
+    explanation: "OneLake presents one logical copy of data for the whole organization, built on ADLS Gen2, so different Fabric compute experiences (Lakehouse, Warehouse, Power BI) can reference the same physical files instead of maintaining separate copies."
+    domain: azure-stack
+  - id: q3
+    type: multi
+    prompt: "Which statements accurately describe the AWS data engineering philosophy compared to Azure Fabric's?"
+    options:
+      - "AWS favors choosing separate best-of-breed services and wiring them together yourself"
+      - "AWS has no equivalent of a shared catalog across services"
+      - "Fabric bundles storage, compute experiences, and BI into one pre-integrated SaaS product"
+      - "Both approaches can implement the same medallion (raw/curated/serving) pattern"
+    correct: [0, 2, 3]
+    explanation: "AWS is composable (you choose and connect Athena, Redshift, EMR, etc., sharing the Glue Data Catalog), while Fabric pre-integrates storage and compute into one product. Both are just different implementations of the same vendor-neutral medallion pattern."
+    domain: comparison
+  - id: q4
+    type: order
+    prompt: "Order these layers of a typical medallion lakehouse architecture, from data landing to business-ready."
+    items:
+      - "Raw / bronze: data landed as-is from source systems"
+      - "Curated / silver: cleaned, deduplicated, conformed to a schema"
+      - "Serving / gold: aggregated, business-ready tables for BI and ML"
+    correctOrder: [0, 1, 2]
+    explanation: "Data always lands unmodified first (bronze) for lineage and replay, then gets cleaned and conformed (silver), and only then gets aggregated into the business-ready shape consumers query (gold)."
+    domain: lakehouse-pattern
+  - id: q5
+    type: match
+    prompt: "Match each AWS service to its primary role in the data stack."
+    left: ["Amazon Athena", "Amazon Redshift", "AWS Lake Formation", "AWS Glue"]
+    right: ["Serverless ad-hoc SQL directly over S3", "Managed data warehouse for high-concurrency BI queries", "Centralized fine-grained governance over the lake and catalog", "Managed ETL and cataloging"]
+    correctPairs: [[0, 0], [1, 1], [2, 2], [3, 3]]
+    explanation: "Athena is serverless query-over-S3, Redshift is the warehouse engine, Lake Formation layers governance on top of S3 and the Glue Data Catalog, and Glue handles both ETL jobs and populating the shared catalog."
+    domain: aws-stack
+  - id: q6
+    type: single
+    prompt: "A team wants to run custom, long-tuned Spark pipelines with direct cluster control on AWS, beyond what serverless Glue jobs comfortably offer. Which service fits best?"
+    options:
+      - "Amazon Athena"
+      - "Amazon EMR"
+      - "AWS Lake Formation"
+      - "Amazon Redshift Spectrum"
+    correct: 1
+    explanation: "EMR provides managed Hadoop/Spark clusters with direct tuning control, suited to large-scale custom processing, whereas Athena is serverless ad-hoc SQL and Lake Formation is a governance layer, not a compute engine."
+    domain: aws-stack
+  - id: q7
+    type: predict
+    prompt: "A retail company is already standardized on Microsoft 365 and Power BI, with analysts who are strong in SQL but have little Spark or infrastructure experience. Which factor most strongly favors choosing Microsoft Fabric over a composable AWS stack?"
+    code: |
+      Team skills: SQL, Power BI
+      Existing tooling: Microsoft 365, Power BI licenses org-wide
+      Need to swap in custom open-source engines: low
+    language: text
+    options:
+      - "Fabric requires no cataloging of any kind"
+      - "The team's existing tooling and skill composition align with Fabric's unified, less infrastructure-heavy model"
+      - "AWS services cannot be secured with fine-grained access control"
+      - "Fabric is always cheaper regardless of usage pattern"
+    correct: 1
+    explanation: "The decision in practice hinges on organizational fit: existing Microsoft 365/Power BI investment and a SQL-heavy, infrastructure-light team play directly to Fabric's pre-integrated, lower-wiring-effort model, not on some inherent technical superiority."
+    domain: choosing-a-stack
+  - id: q8
+    type: multi
+    prompt: "Which of these are real costs or risks of the AWS composable approach compared to Azure Fabric's unified approach?"
+    options:
+      - "More services to individually configure, secure, and keep consistent"
+      - "Cost tracking spread across multiple per-service bills (S3, Glue, Athena, Redshift)"
+      - "No ability to substitute a different query engine later"
+      - "Requires more integration work up front to wire services together"
+    correct: [0, 1, 3]
+    explanation: "AWS's flexibility comes at the cost of more moving parts to configure and monitor, and cost spread across several billing dimensions. Its strength, not a weakness, is that engines are substitutable since storage (S3) doesn't assume a specific compute engine."
+    domain: comparison
+  - id: q9
+    type: short
+    prompt: "Explain why 'S3 plus the Glue Data Catalog' functions as a shared contract in AWS's data stack, even though AWS has no single dedicated 'lake' product like OneLake."
+    rubric:
+      - criterion: "Notes that S3 is the common storage substrate every AWS analytics service reads/writes"
+        points: 1
+      - criterion: "Notes that the Glue Data Catalog provides shared schema/metadata so multiple engines (Athena, Redshift Spectrum, EMR) can consistently read the same data without their own separate catalogs"
+        points: 1
+    explanation: "Because every AWS analytics service can point at the same S3 objects, and the Glue Data Catalog gives them a common view of table schema and location, the pair together substitute for a dedicated lake product — the contract is convention plus shared metadata rather than a single owning service."
+    domain: aws-stack
+  - id: q10
+    type: single
+    prompt: "Why does this module advise verifying specific Microsoft Fabric capacity/pricing details against current documentation rather than treating them as fixed facts?"
+    options:
+      - "Because Fabric is being discontinued"
+      - "Because Fabric is a fast-evolving SaaS platform whose workload boundaries, capacity model, and pricing change frequently, unlike durable architectural concepts"
+      - "Because Microsoft does not publish documentation for Fabric"
+      - "Because pricing is identical to AWS and doesn't need separate verification"
+    correct: 1
+    explanation: "Vendor specifics like SKU/capacity models and pricing are volatile and change often as a young platform matures, while the underlying lakehouse concepts (bronze/silver/gold, shared catalog, open table formats) are durable — which is exactly the distinction CLAUDE.md's accuracy rules ask authors to preserve."
+    domain: choosing-a-stack

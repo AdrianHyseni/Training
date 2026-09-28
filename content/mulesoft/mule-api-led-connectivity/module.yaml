@@ -1,0 +1,14 @@
+id: mule-api-led-connectivity
+line: mulesoft
+title: "MuleSoft API-Led Connectivity & Integration Patterns"
+level: practitioner
+estimatedMinutes: 75
+prerequisites: []
+related: []
+certifications: []
+lastReviewed: "2026-09-28"
+verify:
+  - claim: "The current name, structure, and passing score of MuleSoft's developer certification exams (e.g. any 'MCD' exam codes and levels)"
+    sourceUrl: "https://training.mulesoft.com/certification"
+  - claim: "Current Anypoint Platform component names and pricing/tiering for API Manager, Exchange, and CloudHub (these are renamed and re-tiered periodically)"
+    sourceUrl: "https://www.mulesoft.com/platform/enterprise-integration"

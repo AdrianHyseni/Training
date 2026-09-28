@@ -1,0 +1,118 @@
+passThreshold: 0.75
+questions:
+  - id: q1
+    type: single
+    prompt: "A checkout service must guarantee that exactly one worker processes each 'charge this card' message, even though several workers are listening for work."
+    options:
+      - "A point-to-point channel"
+      - "A publish-subscribe channel"
+      - "A dead-letter queue"
+      - "A message translator"
+    correct: 0
+    explanation: "Point-to-point channels guarantee a message is consumed by exactly one of the listening consumers, which is what you need for a command that must run only once. Pub-sub would deliver the charge command to every subscriber, double-charging the customer."
+    domain: channels
+  - id: q2
+    type: single
+    prompt: "An 'OrderPlaced' event needs to reach three independent downstream systems (inventory, notifications, recommendations), none of which should block or know about the others."
+    options:
+      - "Publish-subscribe channel"
+      - "Point-to-point channel"
+      - "Aggregator"
+      - "Splitter"
+    correct: 0
+    explanation: "Publish-subscribe delivers a copy of each message to every subscriber independently, which is exactly the decoupling three unrelated downstream systems need — none of them has to know the others exist."
+    domain: channels
+  - id: q3
+    type: multi
+    prompt: "Which statements about at-least-once message delivery are true?"
+    options:
+      - "A consumer can receive the same message more than once"
+      - "It guarantees each message is processed exactly one time"
+      - "Consumer-side idempotency is the standard way to make it safe"
+      - "It typically happens because a consumer can crash after processing but before acknowledging"
+    correct: [0, 2, 3]
+    explanation: "At-least-once delivery means duplicates are possible, not ruled out — a consumer that dies after finishing work but before acking causes the broker to redeliver. Idempotency (not the broker) is what makes reprocessing safe."
+    domain: reliability
+  - id: q4
+    type: single
+    prompt: "Why is a broker-level deduplication window not a full substitute for a durable idempotency key checked against a database?"
+    options:
+      - "Deduplication windows only work with point-to-point channels"
+      - "A redelivery can arrive after the dedup window has expired, so an older duplicate would slip through"
+      - "Deduplication windows are always disabled by default"
+      - "Idempotency keys are required by every broker's API"
+    correct: 1
+    explanation: "A dedup window only catches duplicates that arrive close together in time. A message redelivered hours or days later (e.g. after a consumer outage and later replay) falls outside the window, so only a durable, unbounded idempotency check protects against it."
+    domain: reliability
+  - id: q5
+    type: order
+    prompt: "Order the steps of the transactional outbox pattern from an order being placed to a downstream consumer safely processing it."
+    items:
+      - "Write the business row and the outgoing message to an outbox table in one database transaction"
+      - "A publisher process reads unpublished outbox rows and sends them to the message broker"
+      - "The publisher marks the outbox row as sent once the broker acknowledges"
+      - "A consumer processes the message, using an idempotency key to ignore any duplicate delivery"
+    correctOrder: [0, 1, 2, 3]
+    explanation: "The outbox write must be atomic with the business change first, so a publisher can't emit a message for a change that didn't happen (or vice versa). Publishing and marking-sent happen next, and because the publisher can crash between those two steps and redeliver, the consumer's idempotency check is what makes the whole chain safe."
+    domain: reliability
+  - id: q6
+    type: single
+    prompt: "What specific failure does the transactional outbox pattern prevent?"
+    options:
+      - "A message being published even though the database change that triggered it never committed, or the reverse"
+      - "A consumer processing a message twice"
+      - "A downstream system going offline"
+      - "A message being routed to the wrong queue"
+    correct: 0
+    explanation: "Without the outbox, the database write and the message publish are two separate operations that can't both succeed or both fail together — a crash between them leaves the two systems disagreeing. Writing the message into the same transaction as the business change closes that gap."
+    domain: reliability
+  - id: q7
+    type: match
+    prompt: "Match each routing/shaping pattern to what it does."
+    left: ["Content-based router", "Splitter", "Aggregator", "Message translator"]
+    right:
+      - "Sends a message down one of several channels based on inspecting its content"
+      - "Breaks one composite message into several independent messages"
+      - "Collects related messages and combines them into one once a condition is met"
+      - "Converts a message from one system's data format into another's"
+    correctPairs: [[0, 0], [1, 1], [2, 2], [3, 3]]
+    explanation: "Each pattern solves a distinct shaping/routing problem: content-based router decides where a message goes, splitter fans one message out, aggregator (the stateful one) fans several back into one, and translator only changes format without changing destination or cardinality."
+    domain: routing
+  - id: q8
+    type: predict
+    prompt: "A consumer processes 'ChargeCard' messages by running `UPDATE accounts SET balance = balance - amount WHERE id = ?` directly, with no idempotency key check. The broker redelivers a message after a crash. What happens?"
+    code: |
+      -- consumer logic, no dedup/idempotency key
+      UPDATE accounts SET balance = balance - amount WHERE id = :account_id;
+    language: sql
+    options:
+      - "The customer's balance is debited twice for the same logical charge"
+      - "Postgres automatically detects and ignores the duplicate UPDATE"
+      - "The second UPDATE has no effect because balance is unchanged"
+      - "The message broker guarantees this can never happen"
+    correct: 0
+    explanation: "A relative decrement like `balance = balance - amount` is not naturally idempotent — running it twice subtracts twice. Without an idempotency key to detect 'I already processed this message,' a redelivery silently double-charges the account."
+    domain: reliability
+  - id: q9
+    type: multi
+    prompt: "Which practices are part of a healthy dead-letter queue (DLQ) strategy?"
+    options:
+      - "Alerting when messages land in the DLQ, since a healthy system's DLQ should normally be empty"
+      - "Retrying every failed message forever on the main queue so nothing is ever dead-lettered"
+      - "Using exponential backoff with jitter between retry attempts before dead-lettering"
+      - "Providing a way to inspect, fix, and replay a dead-lettered message"
+    correct: [0, 2, 3]
+    explanation: "A DLQ is only useful if failures are visible (alerting), retries are spaced out so a recovering downstream isn't hammered (backoff with jitter), and dead messages can actually be fixed and replayed. Retrying forever on the main queue defeats the point of a DLQ — it just blocks the queue behind the bad message indefinitely."
+    domain: reliability
+  - id: q10
+    type: short
+    prompt: "Your team wants to remove a field from a shared message format because it's no longer used internally. List two reasons this could break consumers, and one safer alternative."
+    rubric:
+      - criterion: "Explains that other systems may still read that field even if the producing team no longer uses it internally, since the message is a contract regardless of who 'owns' it"
+        points: 1
+      - criterion: "Notes that removing/renaming a field is a breaking change (vs. adding an optional field, which is backward-compatible)"
+        points: 1
+      - criterion: "Proposes a safer alternative: versioned messages published side by side during a migration window, a compatibility-checking schema registry, or a monitored deprecation period"
+        points: 1
+    explanation: "A message format is a contract the moment any other system consumes it, whether or not that's documented. Removing a field breaks any consumer still reading it with no warning; the safer path is treating the change as a breaking version and giving consumers a monitored migration window rather than mutating the shared format in place."
+    domain: contracts

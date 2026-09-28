@@ -1,0 +1,41 @@
+exercises:
+  - id: ex1
+    prompt: >-
+      A `support_tickets` table has 20M rows. 90% of queries filter on
+      `status = 'open'`, which matches only about 3% of rows. Design an
+      indexing strategy and explain your reasoning.
+    modelAnswer: |
+      Use a partial B-tree index: `CREATE INDEX ON support_tickets (created_at) WHERE status = 'open'`.
+      Since only 3% of rows match, the index stays small — likely small enough to
+      live entirely in shared_buffers — which keeps the common query fast without
+      paying the write/storage cost of indexing all 20M rows. If queries also filter
+      by assignee, consider a composite partial index `(assignee_id, created_at) WHERE status = 'open'`.
+      Confirm with EXPLAIN ANALYZE that the planner actually picks it up, and monitor
+      index bloat since 'open' tickets churn (rows leave the partial index as they close).
+    rubric:
+      - criterion: "Proposes a partial index scoped to status = 'open'"
+        points: 2
+      - criterion: "Explains why a smaller index improves cache residency / read latency"
+        points: 2
+      - criterion: "Notes the write-cost tradeoff and/or bloat monitoring"
+        points: 1
+  - id: ex2
+    prompt: >-
+      Your team wants to add an index on every foreign key "just in case."
+      Write a short design note pushing back on or refining this policy.
+    modelAnswer: |
+      Foreign keys are frequently joined on, so indexing them is usually reasonable —
+      but "every FK, unconditionally" ignores actual query patterns. A better policy:
+      index FK columns that appear in JOIN or WHERE clauses in production queries
+      (check pg_stat_statements), skip FKs that are rarely queried directly, and
+      prefer composite indexes over several single-column indexes when queries
+      filter on multiple columns together. Revisit periodically using
+      pg_stat_user_indexes to find unused indexes and drop them — every index is
+      ongoing write overhead and vacuum work, not a free insurance policy.
+    rubric:
+      - criterion: "Doesn't just agree — pushes back with a query-pattern-driven policy"
+        points: 2
+      - criterion: "Mentions using pg_stat_statements / pg_stat_user_indexes as evidence"
+        points: 2
+      - criterion: "Notes ongoing cost (writes, vacuum) of unused indexes"
+        points: 1

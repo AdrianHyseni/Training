@@ -1,0 +1,31 @@
+cards:
+  - id: c1
+    front: "What is a data lakehouse?"
+    back: "A pattern combining the cheap, flexible storage of a data lake with the structure, ACID transactions, and performance of a data warehouse, using open table formats over object storage."
+  - id: c2
+    front: "What are the three layers of the medallion architecture?"
+    back: "Raw/bronze (landed as-is), curated/silver (cleaned and conformed), serving/gold (aggregated, business-ready)."
+  - id: c3
+    front: "What is the Glue Data Catalog?"
+    back: "AWS's shared, Hive-metastore-compatible metadata repository that Athena, Redshift Spectrum, EMR, and other services read schema from."
+  - id: c4
+    front: "What is AWS Lake Formation for?"
+    back: "Centralized, fine-grained governance and access control layered on top of S3 and the Glue Data Catalog, so permissions don't need to be replicated per service."
+  - id: c5
+    front: "What is OneLake in Microsoft Fabric?"
+    back: "A single logical, tenant-wide data lake built on ADLS Gen2 that Fabric items (Lakehouse, Warehouse, Power BI) all reference directly, avoiding separate copies."
+  - id: c6
+    front: "What is the core philosophical difference between AWS's and Azure Fabric's data stacks?"
+    back: "AWS is composable — you choose and wire together separate best-of-breed services around S3. Fabric is a pre-integrated SaaS product where storage and compute experiences are unified by default."
+  - id: c7
+    front: "When would Amazon Athena be preferred over Amazon Redshift?"
+    back: "For serverless, pay-per-query ad-hoc SQL directly over data in S3, when you don't want to provision or manage a warehouse cluster."
+  - id: c8
+    front: "What does Direct Lake mode let Power BI do in Fabric?"
+    back: "Query OneLake data directly without a separate import/refresh step, since the Lakehouse/Warehouse and the semantic model share the same underlying files."
+  - id: c9
+    front: "What factors typically decide AWS vs. Azure for a data platform, beyond raw architecture merits?"
+    back: "Existing organizational tooling commitment, team skill composition, need for engine substitutability, governance/compliance tooling, and cost model tolerance."
+  - id: c10
+    front: "Why should specific cloud vendor pricing and capacity models be treated as 'verify' items rather than memorized facts?"
+    back: "They are volatile — they change frequently as platforms evolve — unlike durable architectural concepts like the medallion pattern or the role of a shared catalog."

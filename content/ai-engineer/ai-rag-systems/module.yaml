@@ -1,0 +1,14 @@
+id: ai-rag-systems
+line: ai-engineer
+title: "RAG Systems: Retrieval-Augmented Generation in Production"
+level: practitioner
+estimatedMinutes: 75
+prerequisites: []
+related: []
+certifications: []
+lastReviewed: "2026-09-28"
+verify:
+  - claim: "Anthropic's Contextual Retrieval technique (prepending LLM-generated chunk context before embedding and BM25 indexing) reduced retrieval failure rate by 35% alone, 49% combined with BM25, and 67% combined with BM25 and reranking, on Anthropic's internal evaluation."
+    sourceUrl: "https://www.anthropic.com/news/contextual-retrieval"
+  - claim: "Specific prompt-caching and embedding-model parameters (context window sizes, cache TTLs, model names) referenced for retrieval pipelines change over time."
+    sourceUrl: "https://docs.claude.com/en/docs_site_map.md"

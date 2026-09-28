@@ -1,0 +1,13 @@
+terms:
+  - term: "Idempotency"
+    definition: "The property that applying an operation multiple times produces the same result as applying it once — the foundation for safely retrying pipeline work after a failure."
+  - term: "Consumer lag"
+    definition: "The gap between the latest offset available on a partition and the offset a consumer group has processed up to. Growing lag is the primary freshness signal in a streaming pipeline."
+  - term: "Schema registry"
+    definition: "A component that stores versioned schemas for topics and enforces compatibility rules at write time, rejecting producer changes that would break existing consumers."
+  - term: "Consumer group"
+    definition: "A set of consumers that cooperate to read a topic, with Kafka assigning each partition to exactly one consumer in the group at a time — the mechanism behind horizontal scaling of consumption."
+  - term: "Backward compatibility (schema)"
+    definition: "A new schema version can correctly read data written under an older schema version — typically achieved by adding fields as optional with defaults rather than required."
+  - term: "Exactly-once semantics"
+    definition: "A processing guarantee that each event's effect is applied exactly one time even across retries and failures, achieved in Kafka via idempotent producers plus transactions, but only within the transactional boundary the system controls."

@@ -1,0 +1,12 @@
+id: ei-patterns
+line: enterprise-integration
+title: Enterprise Integration Patterns Fundamentals
+level: foundation
+estimatedMinutes: 75
+prerequisites: []
+related: []
+certifications: []
+lastReviewed: "2026-09-28"
+verify:
+  - claim: "The Enterprise Integration Patterns catalog (Hohpe & Woolf) describes 65 named patterns for messaging-based integration."
+    sourceUrl: "https://www.enterpriseintegrationpatterns.com/patterns/messaging/"

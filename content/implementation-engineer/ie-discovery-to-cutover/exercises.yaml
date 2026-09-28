@@ -1,0 +1,87 @@
+exercises:
+  - id: ex1
+    prompt: >-
+      During discovery for a mid-size manufacturer replacing its order
+      management system, you learn: (1) the sales team currently manually
+      applies a volume discount above 500 units that isn't in the official
+      pricing sheet, because a past customer complaint forced an exception
+      years ago that never got formalized; (2) the new platform has a
+      standard tiered-pricing feature that covers volume discounts natively;
+      (3) the warehouse team wants a custom "priority pick" flag that doesn't
+      exist in the new platform or any workaround discussed so far. Write a
+      short fit-gap summary covering all three findings, classifying each as
+      fit, gap, or business process change, with your reasoning.
+    modelAnswer: |
+      1. Manual volume discount above 500 units — classify as FIT (with configuration).
+      The new platform's standard tiered-pricing feature already covers volume-based
+      discounting; this isn't a true gap, it's a case where the old system lacked the
+      capability and the business built a manual workaround. Recommend configuring
+      the standard tiered-pricing rule to replicate the 500-unit threshold, which
+      retires the manual step and removes a piece of undocumented tribal knowledge.
+
+      2. Priority pick flag — classify as GAP, pending further discovery. Before
+      recommending customization, confirm exactly what "priority" changes
+      operationally (pick order? warehouse routing? SLA?) and check whether an
+      existing field (e.g. order priority, fulfillment SLA) can be repurposed via
+      configuration. If no configuration path exists and the business impact is
+      real (not just convenience), this becomes a candidate for a scoped
+      customization — but only after confirming it can't be solved with existing
+      fields or a process change on the warehouse side.
+
+      3. General note: any requirement rooted in "that's how we've always done it"
+      without a current documented reason should be flagged for business process
+      change consideration — the volume discount case above is a good example of
+      formalizing a workaround as configuration instead of preserving it as a
+      manual exception.
+    rubric:
+      - criterion: "Classifies the volume discount as fit and ties it to the platform's tiered-pricing capability"
+        points: 2
+      - criterion: "Classifies the priority pick flag as a gap and pushes for further discovery/configuration check before recommending customization"
+        points: 2
+      - criterion: "Explicitly reasons about business process change vs. preserving an undocumented workaround"
+        points: 1
+  - id: ex2
+    prompt: >-
+      You're planning cutover for a mid-size retailer migrating its inventory
+      management system over a single weekend. The business requires the
+      website and in-store POS to keep functioning throughout, and leadership
+      has asked for a plan that includes a real rollback option. Draft a
+      cutover runbook outline (key steps with owners and go/no-go checkpoints)
+      and explain your rollback approach.
+    modelAnswer: |
+      Runbook outline:
+      1. Fri evening: freeze inventory writes in legacy system; confirm read-only
+         (Owner: Ops Lead).
+      2. Fri evening: final incremental extract from legacy system, record counts
+         logged (Owner: Migration Lead).
+      3. Fri night: production load into new platform (Owner: Migration Lead).
+      4. Fri night: reconciliation — SKU counts, on-hand quantities, control totals
+         vs. extract (Owner: Data QA).
+      5. GO/NO-GO CHECKPOINT 1: data reconciled within tolerance? (Decision owner:
+         Program Director). If NO-GO, execute rollback: restore legacy system to
+         read-write, keep POS/website pointed at legacy, notify stores, reschedule.
+      6. Sat morning: smoke test core flows (stock adjustment, POS sale decrementing
+         inventory, website stock display) (Owner: QA Lead).
+      7. Sat morning: integration check — POS and website against new platform in a
+         staging/canary mode before full cutover (Owner: Integration Lead).
+      8. GO/NO-GO CHECKPOINT 2: integrations verified end-to-end? (Decision owner:
+         Program Director).
+      9. Sat midday: repoint POS and website to new platform; monitor error rates
+         closely for first few hours (Owner: Integration Lead + on-call team).
+      10. Sun: legacy system moved to read-only archive; hypercare begins Monday.
+
+      Rollback approach: because POS and website must keep functioning, they stay
+      pointed at the legacy system until checkpoint 2 passes — the new platform is
+      validated "dark" first. This means rollback before checkpoint 2 is simple
+      (legacy was never actually disconnected). The riskier window is after
+      repointing at step 9; for that, define a hard time-boxed monitoring period
+      (e.g., 2 hours) with defined error-rate thresholds, and a rehearsed procedure
+      to repoint POS/website back to legacy and restore its write access if
+      thresholds are breached.
+    rubric:
+      - criterion: "Includes ordered steps with named owners covering freeze, extract, load, and reconciliation"
+        points: 2
+      - criterion: "Includes at least one explicit go/no-go checkpoint with a named decision owner"
+        points: 1
+      - criterion: "Rollback plan is concrete (not 'we'll figure it out') and addresses keeping POS/website functioning throughout"
+        points: 2

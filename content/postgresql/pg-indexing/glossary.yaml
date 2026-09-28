@@ -1,0 +1,11 @@
+terms:
+  - term: "Sequential scan"
+    definition: "Reading every row in a table in physical order, without using an index. Cheap for small tables, expensive at scale."
+  - term: "Selectivity"
+    definition: "The fraction of rows a predicate matches. Low selectivity (few matching rows) favors an index scan; high selectivity often favors a sequential scan."
+  - term: "Partial index"
+    definition: "An index built with a WHERE clause, covering only the rows that match — smaller and cheaper to maintain than a full-table index."
+  - term: "Expression index"
+    definition: "An index built on the output of a function or expression rather than a raw column, e.g. an index on lower(email)."
+  - term: "pg_stat_statements"
+    definition: "A Postgres extension that tracks execution statistics (calls, total time, rows) for every distinct normalized query."

@@ -1,0 +1,79 @@
+exercises:
+  - id: ex1
+    prompt: >-
+      Your team is building a RAG system over a 40,000-page internal
+      engineering wiki (Markdown pages with headings, code blocks, and
+      tables). An early prototype using fixed-size 500-token chunking with
+      10% overlap gets frequent complaints that answers cite the wrong code
+      example or mix up parameters from two different config tables. Design
+      an ingestion strategy that addresses this, and explain your reasoning.
+    modelAnswer: |
+      Switch from fixed-size chunking to document-aware chunking: split on the
+      Markdown structure itself (H2/H3 sections) and treat each code block or
+      table as an atomic unit that's never split mid-block, even if that makes
+      chunk sizes uneven. Fixed-size chunking with a flat token count has no
+      idea a table or code block is a single meaningful unit, so it slices
+      through them — that's very likely the direct cause of the "wrong
+      example / mixed-up parameters" complaints.
+
+      Layer on Contextual Retrieval-style preprocessing: before embedding each
+      chunk, prepend a short LLM-generated blurb noting which page and section
+      it came from ("This chunk is from the 'Payment Service Config'
+      page, under 'Retry settings'"), so a chunk that only makes sense with
+      its surrounding context still carries enough information to be found
+      and correctly attributed. Index both the contextualized chunk's
+      embedding and its text for a BM25/keyword index, since wiki content is
+      full of exact identifiers (service names, config keys) that keyword
+      search will catch better than embeddings alone.
+
+      Finally, keep the source page's title, last-updated date, and section
+      path as chunk metadata, so retrieval can be filtered or reranked using
+      recency and location, not just topical similarity.
+    rubric:
+      - criterion: "Proposes structure-aware/document-aware chunking that keeps code blocks and tables intact, and identifies fixed-size chunking as the likely cause of mixed-up content"
+        points: 2
+      - criterion: "Proposes a mechanism to preserve context lost at chunk boundaries (e.g. contextual blurb, section/page metadata)"
+        points: 2
+      - criterion: "Mentions hybrid search (keyword index) as relevant for exact identifiers/config keys common in engineering docs"
+        points: 1
+  - id: ex2
+    prompt: >-
+      A team ships a RAG-based support copilot with no offline evaluation —
+      they only eyeball a handful of example answers before launch. Two
+      weeks in, users report the copilot "sometimes makes things up" but the
+      team can't tell if the problem is retrieval or generation. Design an
+      evaluation approach that would let them diagnose this, and describe
+      what they should do once they know.
+    modelAnswer: |
+      Build a small labeled retrieval eval set first: 100-200 real user
+      queries (pulled from support logs, not invented) each paired with the
+      chunk(s) that actually answer them, identified by a human reviewer.
+      Compute recall@k (e.g. at k=5 and k=10) and MRR against this set. This
+      immediately separates the two failure modes the team is currently
+      conflating: if recall@k is low, the retriever isn't finding the right
+      passage at all, and no prompt change will fix that. If recall@k is
+      high, the right passage is being retrieved and the problem is in
+      generation.
+
+      In parallel, run a generation eval on a sample of real (query,
+      retrieved-context, generated-answer) triples: score faithfulness (are
+      the answer's claims traceable to the retrieved context?) and answer
+      relevance (does the answer address the actual question?). A pattern of
+      high recall@k but low faithfulness confirms the model is embellishing
+      or combining unrelated retrieved chunks — the fix is generation-side:
+      require the prompt to cite the specific chunk for each claim, and
+      consider instructing the model to say "not in the provided context"
+      rather than filling gaps.
+
+      Once the diagnosis is known, fix the matching side of the pipeline
+      (chunking/hybrid search/reranking for a retrieval problem; prompt
+      structure and citation requirements for a generation problem) and
+      re-run the same eval set to confirm the metric that was low actually
+      moved — not just that answers "look" better on a few examples.
+    rubric:
+      - criterion: "Proposes a labeled retrieval eval set and computing recall@k and/or MRR to isolate whether retrieval is the problem"
+        points: 2
+      - criterion: "Proposes generation-side metrics (faithfulness/groundedness, answer relevance) evaluated separately from retrieval"
+        points: 2
+      - criterion: "Connects the diagnosis to a concrete fix (retrieval-side vs. generation-side) rather than just proposing metrics in the abstract"
+        points: 1

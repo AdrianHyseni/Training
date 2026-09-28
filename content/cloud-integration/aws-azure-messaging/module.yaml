@@ -1,0 +1,24 @@
+id: aws-azure-messaging
+line: cloud-integration
+title: Messaging and Events on AWS and Azure
+level: practitioner
+estimatedMinutes: 65
+prerequisites: []
+related: []
+certifications: []
+lastReviewed: "2026-09-28"
+verify:
+  - claim: "SQS visibility timeout range (0–43,200 seconds / 12 hours) and default (30 seconds)"
+    sourceUrl: "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-visibility-timeout.html"
+  - claim: "SQS redrive policy fields (maxReceiveCount, deadLetterTargetArn) and default maxReceiveCount behavior"
+    sourceUrl: "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/sqs-dead-letter-queues.html"
+  - claim: "SQS FIFO queue guarantees (exactly-once processing within a message group, ordering per message group ID)"
+    sourceUrl: "https://docs.aws.amazon.com/AWSSimpleQueueService/latest/SQSDeveloperGuide/FIFO-queues.html"
+  - claim: "EventBridge schema registry auto-discovery and code binding generation"
+    sourceUrl: "https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-schema-registry.html"
+  - claim: "Azure Service Bus topics/subscriptions and SQL filter/rule capabilities"
+    sourceUrl: "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-messaging-overview"
+  - claim: "Azure Event Grid push delivery model and supported event sources/handlers"
+    sourceUrl: "https://learn.microsoft.com/en-us/azure/event-grid/overview"
+  - claim: "Azure Service Bus dead-letter queue behavior and max delivery count"
+    sourceUrl: "https://learn.microsoft.com/en-us/azure/service-bus-messaging/service-bus-dead-letter-queues"
